@@ -11,9 +11,15 @@ if ($user->getRole() !== "admin") {
 	die();
 }
 
+if (!empty($_POST['voter']) && ((int) $_POST['voter']) == $_POST['voter']) {
+	$voter = (int) $_POST['voter'];
+	$result = $db->query("update members set checkedin=true where voting_id=$voter");
+}
+
 $header = new Header("2021 Michigan Flyers Election : Poll Worker");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
+$header->addStyle("/styles/vote.css");
 $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/admin-search.js");
 $header->setAttribute('title', 'Michigan Flyers');
@@ -25,7 +31,7 @@ $voters = $db->fetchAssoc('select ANY_VALUE(skymanager_id) as `skymanager_id`, A
 <script type="text/javascript">
 var voters = <?= json_encode($voters); ?>;
 </script>
-<form>
+<form action="checkin.php" method="POST">
 <div class="form-row">
 	<div class="selector">
 		<label class="radio">
@@ -35,6 +41,10 @@ var voters = <?= json_encode($voters); ?>;
 		<label class="radio">
 			<input type="radio" name="button" value="pe" />
 			<a class="radio-button-label" href="/admin/paper.php">Paper Entry</a>
+		</label>
+		<label class="radio">
+			<input type="radio" name="button" value="re" />
+			<a class="radio-button-label" href="/admin/results.php">Results</a>
 		</label>
 	</div>
 </div>
@@ -46,7 +56,19 @@ var voters = <?= json_encode($voters); ?>;
 		<span class="placeholder">No Selected Voter</span>
 	</div>
 </div>
+<div class="form-row">
+	<input class="submit" type="submit" name="submit" value="Check In" />
+</div>
 </form>
+<?php if (!empty($voter)): ?>
+<div id="vote-result">
+	<div id="status" class="<?= $result ? "success" : "failure"; ?>"></div>
+	<div id="message" class="<?= $result ? "success" : "failure"; ?>">
+		<?= !empty($error) ? $error : ($result ? "The member has been checked in" :
+			"The member could not be checked in") ?>
+	</div>
+</div>
+<?php endif; ?>
 <?php
 $footer = new Footer();
 $footer->output();

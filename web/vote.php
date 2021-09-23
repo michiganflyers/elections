@@ -24,7 +24,7 @@ if (!$error) {
 	if ($result) {
 		$to = 'mf2021elec@gmail.com';
 		$from = 'noreply@tyzoid.com';
-		$subject = "[TEST] Ballot Submitted ({$user->voterId()} -> {$candidate['skymanager_id']})";
+		$subject = "Ballot Submitted ({$user->voterId()} -> {$candidate['skymanager_id']})";
 		$headers = 
 			"From: {$from}\r\n" .
 			"Message-ID: 2021election-voter-{$user->voterId()}-{$ballot}-" . mt_rand() . "@tyzoid.com\r\n";

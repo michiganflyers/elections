@@ -25,7 +25,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 		$candidate = $db->fetchRow('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where skymanager_id=' . $candidate_selected);
 
 		if ($result) {
-			$proxy_votes = $db->fetchAssoc("SELECT member_id, submitter_id from votes where submitter_id={$user->voterId()} and position=\"$ballot\"");
+			$proxy_votes = $db->fetchAssoc("SELECT member_id, submitter_id from votes where submitter_id=$voter_selected and position=\"$ballot\"");
 			$num_affected_rows = count($proxy_votes);
 			if ($num_affected_rows > 1) {
 				$proxy_str = "";
@@ -68,6 +68,10 @@ var candidates = <?= json_encode($candidates); ?>;
 		<label class="radio">
 			<input type="radio" name="button" value="pe" checked />
 			<a class="radio-button-label" href="#">Paper Entry</a>
+		</label>
+		<label class="radio">
+			<input type="radio" name="button" value="re" />
+			<a class="radio-button-label" href="/admin/results.php">Results</a>
 		</label>
 	</div>
 </div>
@@ -132,7 +136,7 @@ var candidates = <?= json_encode($candidates); ?>;
 	</div>
 	<div class="ballot-section">
 		<h4 class="section-heading">Voter ID</h4>
-		<h4 id="ballot-voter-id">#<?= $user->voterId(); ?></h4>
+		<h4 id="ballot-voter-id">#<?= $voter_selected; ?></h4>
 	</div>
 <?php if ($proxy_str): ?>
 	<div class="ballot-section">

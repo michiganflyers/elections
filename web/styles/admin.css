@@ -1,7 +1,3 @@
-div#selectedCandidate::before {
-	content: 'Selected Voter';
-}
-
 .profile.ineligible {
 	color: #c00;
 }
