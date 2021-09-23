@@ -1,0 +1,120 @@
+div#vote-result {
+	padding: 20px 0px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+div#vote-result div#status{ 
+	flex-shrink: 0;
+	flex-grow: 0;
+	flex-basis: 60px;
+	width: 60px;
+	height: 60px;
+	border-radius: 100%;
+	line-height: 60px;
+	text-align: center;
+	border: 2px solid transparent;
+	font-size: 1.4rem;
+}
+
+div#vote-result div#status.success::before { content: '\2714'; }
+div#vote-result div#status.failure::before { content: '\2718'; }
+
+div#vote-result div#status.success {
+	border-color: #0a0;
+	color: #0a0;
+}
+
+div#vote-result div#status.failure {
+	background-color: #a00;
+	color: #fff;
+}
+
+div#vote-result div#message {
+	margin-left: 20px;
+}
+
+div#ballot {
+	border: 2px solid rgba(0, 0, 0, .2);
+	padding: 0px 10px;
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+div#ballot div.ballot-section {
+	border-bottom: 2px solid rgba(0, 0, 0, .2);
+	margin: 0px -10px;
+	padding: 0px 10px;
+}
+
+div#ballot div.ballot-section:last-child {
+	border-bottom-width: 0px;
+}
+
+div#ballot h4#ballot-voter-id {
+	padding: 5px 0px;
+}
+
+div.ballot-section .candidate {
+	border: 0;
+}
+
+div.ballot-section h4.section-heading {
+	display: inline-block;
+	height: 30px;
+	line-height: 30px;
+	width: auto;
+	background-color: #000;
+	color: #fff;
+	padding: 0px 30px 0px 10px;
+	margin: 0px -10px;
+	position:relative;
+}
+
+div.ballot-section h4.section-heading::after {
+	position: absolute;
+	right: -29px;
+	content: ' ';
+	height: 0px;
+	width: 0px;
+	border: 15px solid transparent;
+	border-left: 15px solid #000;
+	border-top: 15px solid #000;
+}
+
+
+div.ballot-section h2.ballot-position {
+	margin: 0px -10px;
+	padding: 5px 10px;
+}
+
+div#ballot div#vote-profile {
+	padding: 12px 10px 10px;
+	margin: 0px -10px;
+	max-width: 600px;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 10px;
+}
+
+a#vote-again {
+	text-decoration: none;
+	font-size: 1rem;
+	text-align: center;
+	margin: 0px auto 10px;
+	display: inline-block;
+	position: relative;
+	left: 50%; 
+	transform: translateX(-50%);
+	padding: 10px 20px;
+	border: 2px solid #6ac;
+	background-color: rgba(102, 170, 204, .2);
+	border-radius: 10px;
+	color: #000;
+	transition: background-color 125ms ease-in-out;
+}
+
+a#vote-again:hover {
+	background-color: rgba(102, 170, 204, .6);
+}

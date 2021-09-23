@@ -1,0 +1,267 @@
+body, html{
+	width:100%;
+	height:100%;
+	padding:0px;
+	margin:0px;
+
+    font-family: 'Fira Sans', sans-serif;
+	font-size:20px;
+	color: #000;
+}
+
+h1, h2, h3, h4, h5, h6{
+	font-weight: 800;
+	margin:0px;
+	padding:0px;
+}
+
+h3, h4, h5, h6 {
+	font-weight: 600;
+}
+
+span.errormessage {
+	color: #c00;
+	padding: 10px 0px;
+	font-size: 0.8rem;
+}
+
+#login-help {
+	margin: 0px;
+	padding: 10px 0px;
+}
+
+div#container {
+	position:relative;
+	min-height:100%;
+}
+
+div.loginbar {
+	height:36px;
+	background-color:#11111a;
+	padding:0px 10px;
+	line-height:36px;
+	font-size: 0.75rem;
+	border-bottom:1px solid #000;
+	color:#fff;
+}
+
+div.loginbar a {
+	display:block;
+	padding:6px 10px;
+	height:24px;
+	line-height:24px;
+	float:right;
+	color:#aaa;
+	text-decoration:none;
+}
+
+div.loginbar a:hover {
+	background-color:#444;
+	color:#fff;
+	text-decoration:underline;
+}
+
+div.header {
+	background-color:#333;
+	padding:20px;
+	color:#fff;
+	border-top:1px solid #444;
+	border-bottom:4px solid #6ac;
+}
+
+div.content {
+}
+
+div.page {
+	padding:0px 20px 20px;
+}
+
+div.message {
+	padding-bottom:5px;
+}
+
+div.footercontainer {
+	position:absolute;
+	bottom:0px;
+	width:100%;
+	height:100px;
+}
+
+div.footercontainer div.footer {
+	border-top:4px solid #6ac;
+	background-color:#333;
+	padding:20px;
+	color:#fff;
+	height:56px;
+}
+
+div#results {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	right: 0;
+	background-color: #fff;
+}
+
+div.selected.candidate::before {
+	position: absolute;
+	left: 10px;
+	top: -11px;
+	height: 20px;
+	padding: 0px 5px;
+	line-height: 20px;
+	background-color: #fff;
+	content: 'Selected Candidate';
+	font-size: 0.6rem;
+	color: rgba(0,0,0,0.6);
+	display: block;
+	text-align: center;
+}
+
+div.selected.candidate.voter::before {
+	content: 'Selected Voter';
+}
+
+form .form-row:nth-child(2n+1) div.selected.candidate::before {
+	background-color: #eee;
+}
+
+div.selected.candidate {
+	border: 1px solid rgba(0, 0, 0, .2);
+	position: relative;
+	margin-top: 20px;
+	padding: 10px 10px 0px 10px;
+	border-radius: 10px;
+}
+
+div.selected.candidate span.placeholder {
+	font-size: 0.6rem;
+	color: rgba(0, 0, 0, .8);
+}
+
+.candidate {
+	border: 0px solid rgba(0,0,0,.2);
+	border-top-width: 1px;
+	border-bottom-width: 1px;
+	display: flex;
+}
+
+#results ul {
+	margin: 0;
+	padding: 0;
+}
+
+li.candidate {
+	list-style-type: none;
+	padding: 20px;
+	cursor: pointer;
+}
+
+.candidate > div.profile-icon {
+	padding: 2px;
+	margin-right: 20px;
+}
+
+.candidate > div.profile-icon img {
+	border-radius: 100%;
+	border: 2px solid #fff;
+	box-shadow: 0px 0px 0px 2px #000;
+}
+
+.candidate > div.profile {
+	flex-grow: 1;
+}
+
+.candidate .profile-id::before {
+	content: 'ID: ';
+}
+
+form, form input {
+	font-size: 1rem;
+}
+
+form label {
+	display: block;
+}
+
+form div.selector {
+	display: flex;
+}
+
+form div.selector label {
+	margin: 0px 10px;
+	flex-grow: 1;
+}
+
+form label.radio input {
+	display: none;
+}
+
+form label.radio .radio-button-label {
+	text-decoration: none;
+	color: #000;
+	text-align: center;
+	display: block;
+	padding: 10px;
+	border: 2px solid rgba(0,0,0,.2);
+	border-radius: 10px;
+}
+
+form label.radio input:checked+.radio-button-label {
+	background-color: #000;
+	color: #fff;
+	border: 2px solid #fff;
+	box-shadow: 0px 0px 0px 2px #000;
+}
+
+form label.radio {
+	position: relative;
+}
+
+form label.radio div.hover-tooltip {
+	position: absolute;
+	pointer-events: none;
+	opacity: 0;
+	z-index: 2;
+	transition: opacity 300ms ease-in-out;
+	margin-top: 5px;
+	padding: 10px;
+	border-radius: 10px;
+	background-color: #fff;
+	border: 2px solid rgba(0, 0, 0, .2);
+}
+
+form label.radio div.hover-tooltip::before {
+	position:absolute;
+	content: ' ';
+	background-color: #fff;
+	top: -10px;
+	left: 20px;
+	width: 16px;
+	height: 16px;
+	transform: rotate(45deg);
+	border: 2px solid rgba(0, 0, 0, .2);
+	border-bottom-color: transparent;
+	border-right-color: transparent;
+}
+
+form label.radio:hover div.hover-tooltip {
+	position: absolute;
+	opacity: 1;
+}
+
+form .form-row {
+	padding: 10px 20px;
+	margin: 0px -20px;
+}
+
+form .form-row:nth-child(2n+1) {
+	background-color: #eee;
+}
+
+form input {
+	box-sizing: border-box;
+	width: 100%;
+	display:block;
+	padding: 10px;
+}
