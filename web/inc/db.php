@@ -2,13 +2,22 @@
 class DBHandler{
 	private $mysql;
 
-	function __construct($hostname, $username, $password, $database){
-		global $dbs;
+	private function __construct() {}
 
-		$this->mysql = mysqli_connect($hostname, $username, $password);
-		if(!$this->mysql) die("MySql error: " . mysql_error());
+	public static function Connect($hostname, $username, $password, $database){
+		$handler = new DBHandler();
 
-		mysqli_select_db($this->mysql, $database);
+		$handler->mysql = mysqli_connect($hostname, $username, $password);
+		if(!$handler->mysql) die("MySql error: " . mysql_error());
+
+		mysqli_select_db($handler->mysql, $database);
+		return $handler;
+	}
+
+	public static function Wrap($mysql) {
+		$handler = new DBHandler();
+		$handler->mysql = $mysql;
+		return $handler;
 	}
 
 	public function sanitize($text){
@@ -16,7 +25,11 @@ class DBHandler{
 	}
 
 	public function query($query){
-		return mysqli_query($this->mysql, $query);
+		try {
+			return mysqli_query($this->mysql, $query);
+		} catch (Throwable $err) {
+			return false;
+		}
 	}
 
 	public function fetchRow($query){
@@ -77,5 +90,3 @@ class DBHandler{
 		return base64_encode($str);
 	}
 }
-
-$db = new DBHandler('localhost', '2022mfelection', '<password>', '2022mfelection');

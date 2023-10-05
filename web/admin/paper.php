@@ -11,6 +11,12 @@ if ($user->getRole() !== "admin") {
 	die();
 }
 
+$_pos = $db->fetchAssoc("select position as code, description as label from positions");
+$positions = [];
+foreach ($_pos as $position)
+	$positions[$position['code']] = $position['label'];
+
+$result = null;
 if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 	$candidate_selected = (int) $_POST['candidate'];
 	$voter_selected = (int) $_POST['voter'];
@@ -18,7 +24,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 
 	if ($candidate_selected != $_POST['candidate']) $error = "An eccor occurred while processing your ballot. Please retry.";
 	if ($voter_selected != $_POST['voter']) $error = "An eccor occurred while processing your ballot. Please retry.";
-	if ($ballot !== "VICEPRESIDENT" && $ballot !== "SECRETARY" && $ballot !== "DIRECTOR") $error = "An eccor occurred while processing your ballot. Please retry.";
+	if (!array_key_exists($ballot, $positions)) $error = "An eccor occurred while processing your ballot. Please retry.";
 
 	if (empty($error)) {
 		$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, \"$ballot\", $voter_selected, 'IN PERSON', $voter_selected UNION SELECT $candidate_selected, \"$ballot\", voting_id, 'PROXY IN PERSON', delegate_id from proxy where delegate_id=$voter_selected");
@@ -40,13 +46,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 	}
 }
 
-$positions = [
-	'VICEPRESIDENT' => 'Vice President',
-	'SECRETARY' => 'Secretary',
-	'DIRECTOR' => 'Director'
-];
-
-$header = new Header("2022 Michigan Flyers Election : Poll Worker");
+$header = new Header("Michigan Flyers Election : Poll Worker");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
 $header->addStyle("/styles/vote.css");
@@ -54,11 +54,11 @@ $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/search.js");
 $header->addScript("/js/admin-search.js");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', '2022 Election Administration');
+$header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
 $candidates = $db->fetchAssoc('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where voting_id is not null');
-$voters = $db->fetchAssoc('select ANY_VALUE(skymanager_id) as `skymanager_id`, ANY_VALUE(members.voting_id) as `voting_id`, ANY_VALUE(name) as `name`, ANY_VALUE(username) as `username`, group_concat(proxy.voting_id) as `proxies`, ANY_VALUE(upstream_proxy.delegate_id) as `delegate`, md5(coalesce(ANY_VALUE(email), "")) as `gravatar_hash` from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash` from members where members.voting_id is null');
+$voters = $db->fetchAssoc('select MIN(skymanager_id) as `skymanager_id`, MIN(members.voting_id) as `voting_id`, MIN(name) as `name`, MIN(username) as `username`, group_concat(proxy.voting_id) as `proxies`, MIN(upstream_proxy.delegate_id) as `delegate`, md5(coalesce(MIN(email), "")) as `gravatar_hash` from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash` from members where members.voting_id is null');
 ?>
 <script type="text/javascript">
 var voters = <?= json_encode($voters); ?>;
@@ -81,20 +81,18 @@ var candidates = <?= json_encode($candidates); ?>;
 		</label>
 	</div>
 </div>
+<?php if (empty($positions)): ?>
+<h3>No positions are open for voting.</h3>
+<a href="/admin/voting.php">Create a position</a>
+<?php else: ?>
 <div class="form-row">
 	<div class="selector">
+	<?php foreach ($positions as $code => $label): ?>
 		<label class="radio">
-			<input type="radio" id="vote-vicepresident" name="ballot" value="VICEPRESIDENT" checked />
-			<span class="radio-button-label">Vice President</span>
+			<input type="radio" id="vote-<?= $code ?>" name="ballot" value="<?= $code ?>" checked />
+			<span class="radio-button-label"><?= $label ?></span>
 		</label>
-		<label class="radio">
-			<input type="radio" id="vote-secretary" name="ballot" value="SECRETARY" checked />
-			<span class="radio-button-label">Secretary</span>
-		</label>
-		<label class="radio">
-			<input type="radio" id="vote-director" name="ballot" value="DIRECTOR" />
-			<span class="radio-button-label">Director-At-Large</span>
-		</label>
+	<?php endforeach; ?>
 	</div>
 </div>
 <div class="form-row">
@@ -155,6 +153,7 @@ var candidates = <?= json_encode($candidates); ?>;
 	</div>
 <?php endif; ?>
 </div>
+<?php endif; ?>
 <?php endif; ?>
 <?php
 $footer = new Footer();

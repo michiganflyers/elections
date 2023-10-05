@@ -255,9 +255,39 @@ form .form-row {
 	margin: 0px -20px;
 }
 
-form .form-row:nth-child(2n+1) {
+form .form-row:nth-child(2n+1 of .form-row) {
 	background-color: #eee;
 }
+
+form .form-section > .form-row {
+	border-left: 4px solid #6ac;
+}
+
+form .form-section {
+	margin-bottom: 20px;
+}
+
+form .form-section h3 {
+	background-color: #6ac;
+	color: #fff;
+	margin: 0px -20px;
+	padding: 10px;
+	padding-left: 16px;
+	border-left: 4px solid #6ac;
+}
+
+/*
+form .form-section:before, form .form-section:after {
+	content: '';
+	display: block;
+	border: 0px solid #6ac;
+	width: 10px;
+	margin-left: -20px;
+}
+
+form .form-section:before { border-width: 4px 0 0 0; }
+form .form-section:after { border-width: 0 0 4px 0; }
+*/
 
 form input {
 	box-sizing: border-box;
@@ -265,3 +295,30 @@ form input {
 	display:block;
 	padding: 10px;
 }
+
+form .split-button {
+	display: flex;
+	flex-direction: row;
+	align-content: stretch;
+	gap: 20px;
+}
+
+form .split-button > input {
+	flex-grow: 1;
+}
+
+input[type=submit] {
+	background: linear-gradient(#eee,#e7e7e7);
+	border: 1px solid rgba(0,0,0,.2);
+	border-radius: 3px;
+}
+
+
+input[type=submit].danger {
+	background: linear-gradient(#900, #800);
+	color: #fff;
+	font-weight: bold;
+}
+
+input[type=submit]:hover { background: linear-gradient(#ddd,#d7d7d7); }
+input[type=submit].danger:hover { background: linear-gradient(#800,#700); }

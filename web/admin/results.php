@@ -16,14 +16,14 @@ if (!empty($_POST['voter']) && ((int) $_POST['voter']) == $_POST['voter']) {
 	$result = $db->query("update members set checkedin=true where voting_id=$voter");
 }
 
-$header = new Header("2022 Michigan Flyers Election : Poll Worker");
+$header = new Header("Michigan Flyers Election : Poll Worker");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
 $header->addStyle("/styles/vote.css");
 $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/admin-search.js");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', '2022 Election Administration');
+$header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
 $checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as `proxy` from members where checkedin=true UNION select voter.name, voter.username, voter.voting_id, members.voting_id as `proxy` from members inner join proxy on (proxy.delegate_id=members.voting_id) left join members as `voter` on (voter.voting_id=proxy.voting_id) where members.checkedin = true');

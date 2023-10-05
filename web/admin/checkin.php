@@ -11,22 +11,43 @@ if ($user->getRole() !== "admin") {
 	die();
 }
 
-if (!empty($_POST['voter']) && ((int) $_POST['voter']) == $_POST['voter']) {
+if (isset($_POST['voter'])) {
 	$voter = (int) $_POST['voter'];
-	$result = $db->query("update members set checkedin=true where voting_id=$voter");
+	if (!empty($_POST['voter']) && ((int) $_POST['voter']) == $_POST['voter']) {
+		$result = $db->query("update members set checkedin=true where voting_id=$voter");
+	} else {
+		$result = false;
+		$error = "The selected voter is not eligible";
+	}
 }
 
-$header = new Header("2022 Michigan Flyers Election : Poll Worker");
+$header = new Header("Michigan Flyers Election : Poll Worker");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
 $header->addStyle("/styles/vote.css");
 $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/admin-search.js");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', '2022 Election Administration');
+$header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$voters = $db->fetchAssoc('select ANY_VALUE(skymanager_id) as `skymanager_id`, ANY_VALUE(members.voting_id) as `voting_id`, ANY_VALUE(name) as `name`, ANY_VALUE(username) as `username`, group_concat(proxy.voting_id) as `proxies`, ANY_VALUE(upstream_proxy.delegate_id) as `delegate`, md5(coalesce(ANY_VALUE(email), "")) as `gravatar_hash` from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash` from members where members.voting_id is null');
+$voters = $db->fetchAssoc('
+select
+	MIN(skymanager_id) as `skymanager_id`,
+	MIN(members.voting_id) as `voting_id`,
+	MIN(name) as `name`,
+	MIN(username) as `username`,
+	group_concat(proxy.voting_id) as `proxies`,
+	MIN(upstream_proxy.delegate_id) as `delegate`,
+	md5(coalesce(MIN(email), "")) as `gravatar_hash`
+from members
+	left join proxy on (members.voting_id=proxy.delegate_id)
+	left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id)
+where members.voting_id is not null
+group by members.voting_id
+UNION
+select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash`
+from members where members.voting_id is null');
 ?>
 <script type="text/javascript">
 var voters = <?= json_encode($voters); ?>;
@@ -60,7 +81,7 @@ var voters = <?= json_encode($voters); ?>;
 	<input class="submit" type="submit" name="submit" value="Check In" />
 </div>
 </form>
-<?php if (!empty($voter)): ?>
+<?php if (isset($voter)): ?>
 <div id="vote-result">
 	<div id="status" class="<?= $result ? "success" : "failure"; ?>"></div>
 	<div id="message" class="<?= $result ? "success" : "failure"; ?>">

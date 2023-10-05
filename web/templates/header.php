@@ -97,8 +97,10 @@ class Header{
 		if ($user->loggedin()) {
 			$html .= "\t\t\t\t" . $user->name() . "\n";
 			$html .= "\t\t\t\t" . " <a href=\"/login.php?logout\">Log Out</a>\n";
-			if ($user->getRole() === "admin")
-				$html .= "\t\t\t\t" . " <a href=\"/admin/checkin.php\">Poll Worker</a>\n";
+			if ($user->getRole() === "admin") {
+				$html .= "\t\t\t\t" . " <a href=\"/admin/checkin.php\">Volunteer</a>\n";
+				$html .= "\t\t\t\t" . " <a href=\"/admin/voting.php\">Admin</a>\n";
+			}
 			$html .= "\t\t\t\t<a href=\"/index.php\">Home</a>\n";
 		} else if (basename($_SERVER['PHP_SELF']) != 'login.php') {
 			$html .= "\t\t\t\t<a href=\"/login.php\">Log In</a>\n";

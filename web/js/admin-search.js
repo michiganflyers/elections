@@ -63,6 +63,8 @@ $(function(){
 
 			csc.appendChild(profileimgsect);
 			csc.appendChild(profiletext);
+			var smid = document.getElementById('voter-smid');
+			if (smid) smid.value = candidate.skymanager_id;
 			document.getElementById('voter-input').value = candidate.voting_id;
 			document.getElementById('voter-searchbox').value = "";
 			search('');
