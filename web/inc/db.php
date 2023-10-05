@@ -78,4 +78,4 @@ class DBHandler{
 	}
 }
 
-$db = new DBHandler('localhost', '2021mfelection', 'SHa9SGdAlNmafLvJSWjZ', '2021mfelection');
+$db = new DBHandler('localhost', '2022mfelection', '<password>', '2022mfelection');

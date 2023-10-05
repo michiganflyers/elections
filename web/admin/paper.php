@@ -18,7 +18,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 
 	if ($candidate_selected != $_POST['candidate']) $error = "An eccor occurred while processing your ballot. Please retry.";
 	if ($voter_selected != $_POST['voter']) $error = "An eccor occurred while processing your ballot. Please retry.";
-	if ($ballot !== "PRESIDENT" && $ballot !== "DIRECTOR") $error = "An eccor occurred while processing your ballot. Please retry.";
+	if ($ballot !== "VICEPRESIDENT" && $ballot !== "SECRETARY" && $ballot !== "DIRECTOR") $error = "An eccor occurred while processing your ballot. Please retry.";
 
 	if (empty($error)) {
 		$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, \"$ballot\", $voter_selected, 'IN PERSON', $voter_selected UNION SELECT $candidate_selected, \"$ballot\", voting_id, 'PROXY IN PERSON', delegate_id from proxy where delegate_id=$voter_selected");
@@ -40,7 +40,13 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 	}
 }
 
-$header = new Header("2021 Michigan Flyers Election : Poll Worker");
+$positions = [
+	'VICEPRESIDENT' => 'Vice President',
+	'SECRETARY' => 'Secretary',
+	'DIRECTOR' => 'Director'
+];
+
+$header = new Header("2022 Michigan Flyers Election : Poll Worker");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
 $header->addStyle("/styles/vote.css");
@@ -48,7 +54,7 @@ $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/search.js");
 $header->addScript("/js/admin-search.js");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', '2021 Election Administration');
+$header->setAttribute('tagline', '2022 Election Administration');
 $header->output();
 
 $candidates = $db->fetchAssoc('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where voting_id is not null');
@@ -78,8 +84,12 @@ var candidates = <?= json_encode($candidates); ?>;
 <div class="form-row">
 	<div class="selector">
 		<label class="radio">
-			<input type="radio" id="vote-president" name="ballot" value="PRESIDENT" checked />
-			<span class="radio-button-label">President</span>
+			<input type="radio" id="vote-vicepresident" name="ballot" value="VICEPRESIDENT" checked />
+			<span class="radio-button-label">Vice President</span>
+		</label>
+		<label class="radio">
+			<input type="radio" id="vote-secretary" name="ballot" value="SECRETARY" checked />
+			<span class="radio-button-label">Secretary</span>
 		</label>
 		<label class="radio">
 			<input type="radio" id="vote-director" name="ballot" value="DIRECTOR" />
@@ -120,7 +130,7 @@ var candidates = <?= json_encode($candidates); ?>;
 <div id="ballot">
 	<div class="ballot-section">
 		<h4 class="section-heading">Position</h4>
-		<h2 class="ballot-position"><?= ucwords(strtolower($ballot)); ?></h2>
+		<h2 class="ballot-position"><?= $positions[$ballot]; ?></h2>
 	</div>
 	<div class="ballot-section">
 		<h4 class="section-heading">Candidate</h4>

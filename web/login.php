@@ -25,7 +25,7 @@ if (isset($_GET['denied'])) {
 $header = new Header("Login Required");
 $header->addStyle("/styles/style.css");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', '2021 Online Ballot');
+$header->setAttribute('tagline', '2022 Online Ballot');
 $header->output();
 ?>
 <h3 id="login-help">Sign in with your Skymanager Account</h3>

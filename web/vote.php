@@ -15,19 +15,19 @@ $candidate_selected = (int) $_POST['candidate'];
 $ballot = $_POST['ballot'];
 
 if ($candidate_selected != $_POST['candidate']) $error = "An eccor occurred while processing your ballot. Please retry.";
-if ($ballot !== "PRESIDENT" && $ballot !== "DIRECTOR") $error = "An eccor occurred while processing your ballot. Please retry.";
+if ($ballot !== "VICEPRESIDENT" && $ballot !== "SECRETARY" && $ballot !== "DIRECTOR") $error = "An eccor occurred while processing your ballot. Please retry.";
 
 if (!$error) {
 	//$result = $db->query("INSERT INTO votes (candidate_id, position, member_id) values ($candidate_selected, \"$ballot\", {$user->voterId()})");
 	$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, \"$ballot\", {$user->voterId()}, 'ONLINE', {$user->voterId()} UNION SELECT $candidate_selected, \"$ballot\", voting_id, 'PROXY ONLINE', delegate_id from proxy where delegate_id={$user->voterId()}");
 	$candidate = $db->fetchRow('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where skymanager_id=' . $candidate_selected);
 	if ($result) {
-		$to = 'mf2021elec@gmail.com';
+		$to = 'mf2022elec@gmail.com';
 		$from = 'noreply@tyzoid.com';
 		$subject = "Ballot Submitted ({$user->voterId()} -> {$candidate['skymanager_id']})";
 		$headers = 
 			"From: {$from}\r\n" .
-			"Message-ID: 2021election-voter-{$user->voterId()}-{$ballot}-" . mt_rand() . "@tyzoid.com\r\n";
+			"Message-ID: 2022election-voter-{$user->voterId()}-{$ballot}-" . mt_rand() . "@tyzoid.com\r\n";
 
 		$body = "Position: " . ucwords(strtolower($ballot)) . "\r\n" .
 			"Candidate: {$candidate['name']} (ID #{$candidate['skymanager_id']})\r\n" .
@@ -59,18 +59,24 @@ foreach ($votes as &$vote) {
 }
 unset($vote);
 
+$positions = [
+	'VICEPRESIDENT' => 'Vice President',
+	'SECRETARY' => 'Secretary',
+	'DIRECTOR' => 'Director'
+];
+
 $voteFor = null;
-if (count($votes) == 1) {
-	$voteFor = $votes[0] == "PRESIDENT" ? "Director" : "President";
+if (count($votes) < count($positions)) {
+	$voteFor = array_values($positions)[count($votes)];
 }
 
-$header = new Header("2021 Michigan Flyers Election");
+$header = new Header("2022 Michigan Flyers Election");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/vote.css");
 $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/search.js");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', '2021 Online Ballot');
+$header->setAttribute('tagline', '2022 Online Ballot');
 $header->output();
 ?>
 <div id="vote-result">
@@ -86,8 +92,8 @@ $header->output();
 <?php if ($result): ?>
 <div id="ballot">
 	<div class="ballot-section">
-		<h4 class="section-heading">Position</h4>
-		<h2 class="ballot-position"><?= ucwords(strtolower($ballot)); ?></h2>
+		<h4 class="section-heading">Vice Position</h4>
+		<h2 class="ballot-position"><?= $positions[$ballot]; ?></h2>
 	</div>
 	<div class="ballot-section">
 		<h4 class="section-heading">Candidate</h4>

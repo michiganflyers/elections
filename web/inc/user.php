@@ -60,10 +60,16 @@ class User{
 
 		// Get voter ID
 		$result = $db->fetchRow('select members.voting_id from members left join proxy on (members.voting_id=proxy.voting_id) where proxy.delegate_id is null and skymanager_id=' . ((int) $this->uid));
+		$admincheck = $db->fetchRow('select members.pollworker from members where skymanager_id=' . ((int) $this->uid));
 		if ($result)
 			$this->voterId = $result['voting_id'];
 		else
 			$this->voterId = null;
+
+		if ($admincheck)
+			$this->role = $admincheck['pollworker'];
+		else
+			$this->role = 0;
 
 		return true;
 	}
@@ -93,7 +99,7 @@ class User{
 	}
 
 	public function getRole(){
-		return $this->username === 'tyzoid' ? 'admin' : 'voter';
+		return $this->role ? 'admin' : 'voter';
 		//return $this->role;
 	}
 
