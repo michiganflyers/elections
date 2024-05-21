@@ -1,0 +1,8 @@
+spec:
+  name: michiganflyers-election
+  services:
+  - name: web
+    git:
+      repo_clone_url: https://github.com/michiganflyers/elections.git
+      branch: main
+    dockerfile_path: Dockerfile
