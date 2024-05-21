@@ -25,7 +25,7 @@ function loadPositions() {
 function loadVoters() {
 	global $db;
 
-	return $db->fetchAssoc('
+	$voters = $db->fetchAssoc('
 	select
 		MIN(skymanager_id) as `skymanager_id`,
 		MIN(members.voting_id) as `voting_id`,
@@ -33,15 +33,18 @@ function loadVoters() {
 		MIN(username) as `username`,
 		group_concat(proxy.voting_id) as `proxies`,
 		MIN(upstream_proxy.delegate_id) as `delegate`,
-		md5(coalesce(MIN(email), "")) as `gravatar_hash`
+		coalesce(MIN(email), "") as `gravatar_email`
 	from members
 		left join proxy on (members.voting_id=proxy.delegate_id)
 		left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id)
 	where members.voting_id is not null
 	group by members.voting_id
 	UNION
-	select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash`
+	select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, coalesce(email, "") as `gravatar_email`
 	from members where members.voting_id is null');
+
+	get_gravatar_assoc($voters);
+	return $voters;
 }
 
 $result = null;
@@ -60,34 +63,42 @@ if (!empty($_POST['create'])) {
 			$error = "Created position " . htmlspecialchars($desc);
 	}
 } else if (!empty($_POST['setActive']) || !empty($_POST['deactivate'])) {
-	$positions = loadPositions();
+	if (!array_key_exists('ballot', $_POST)) {
+		$error = "No position selected";
+	} else {
+		$positions = loadPositions();
 
-	$position = $_POST['ballot'];
-	if (!array_key_exists($position, $positions)) $error = "That position does not exist";
-	if (!empty($_POST['deactivate']))
-		$position='';
-		
+		$position = $_POST['ballot'];
+		if (!array_key_exists($position, $positions)) $error = "That position does not exist";
+		if (!empty($_POST['deactivate']))
+			$position='';
 
-	if (empty($error)) {
-		$result = $db->query('UPDATE positions set active=(position="' . $db->sanitize($position) . '")');
-		if ($result === false)
-			$error = "Failed to set active position";
-		else if (empty($position))
-			$error = "Deactivated voting form";
-		else
-			$error = "Set " . htmlspecialchars($positions[$_POST['ballot']]['label']) . " as active.";
+
+		if (empty($error)) {
+			$result = $db->query('UPDATE positions set active=(position="' . $db->sanitize($position) . '")');
+			if ($result === false)
+				$error = "Failed to set active position";
+			else if (empty($position))
+				$error = "Deactivated voting form";
+			else
+				$error = "Set " . htmlspecialchars($positions[$_POST['ballot']]['label']) . " as active.";
+		}
 	}
 } else if (!empty($_POST['remove'])) {
-	$positions = loadPositions();
+	if (!array_key_exists('ballot', $_POST)) {
+		$error = "No position selected";
+	} else {
+		$positions = loadPositions();
 
-	if (!array_key_exists($_POST['ballot'], $positions)) $error = "That position does not exist";
+		if (!array_key_exists($_POST['ballot'], $positions)) $error = "That position does not exist";
 
-	if (empty($error)) {
-		$result = $db->query('DELETE FROM positions WHERE position="' . $db->sanitize($_POST['ballot']) . '"');
-		if ($result === false)
-			$error = "Failed to remove position";
-		else
-			$error = "Removed " . htmlspecialchars($positions[$_POST['ballot']]['label']) . " and discarded cast ballots.";
+		if (empty($error)) {
+			$result = $db->query('DELETE FROM positions WHERE position="' . $db->sanitize($_POST['ballot']) . '"');
+			if ($result === false)
+				$error = "Failed to remove position";
+			else
+				$error = "Removed " . htmlspecialchars($positions[$_POST['ballot']]['label']) . " and discarded cast ballots.";
+		}
 	}
 } else if (!empty($_POST['force'])) {
 	$voters = loadVoters();

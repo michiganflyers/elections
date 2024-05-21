@@ -11,24 +11,41 @@ if (!empty($config)) {
 require_once(BASE . '/inc/db.php');
 require_once(BASE . '/inc/user.php');
 
-$required = ['db-host', 'db-username', 'db-password', 'db-database', 'flyers-user', 'flyers-password'];
+$fieldNames = ['db-type', 'db-host', 'db-username', 'db-password', 'db-database', 'flyers-user', 'flyers-password'];
 
 function test_config($params) {
-	global $required, $db, $user;
+	global $fieldNames, $db, $user;
 
-	if (!empty($params) && count($params) != count($required))
+
+	$config = [
+		"type" => $params['db-type']
+	];
+
+	if (empty($params['flyers-user']) || empty($params['flyers-password']))
 		return "All fields are required";
 
-	mysqli_report(MYSQLI_REPORT_OFF);
-	$mysql = mysqli_connect($params['db-host'], $params['db-username'], $params['db-password']);
-	if (!$mysql)
-		return "Unable to connect to the database.";
+	switch ($params['db-type']) {
+		case "mysql":
+			if (!empty($params) && count($params) != count($fieldNames))
+				return "All fields are required";
+			
+			$config += [
+				'host' => $params['db-host'],
+				'user' => $params['db-username'],
+				'pass' => $params['db-password'],
+				'db'   => $params['db-database']
+			];
 
-	mysqli_select_db($mysql, $params['db-database']);
-	if (mysqli_error($mysql))
-		return "Unable to access database '" . htmlspecialchars($params['db-database']) . "': " . mysqli_error($mysql);
+			$db = MysqlDb::Connect($config->host, $config->user, $config->pass, $config->db);
+			break;
+		case "sqlite":
+			$db = SqliteDb::Connect();
+			break;
+		default:
+			return "Invalid Database Type";
+	}
 
-	mysqli_multi_query($mysql, "
+	$success = $db->exec_multi("
 CREATE TABLE IF NOT EXISTS `members` (
 	`skymanager_id` integer NOT NULL PRIMARY KEY,
 	`name` varchar(128) NOT NULL,
@@ -53,43 +70,36 @@ CREATE TABLE IF NOT EXISTS `votes` (
 	`candidate_id` integer NOT NULL,
 	`position` varchar(64) NOT NULL,
 	`member_id` integer NOT NULL,
-	`vote_type` enum('IN PERSON','ONLINE','PROXY IN PERSON','PROXY ONLINE','UNANIMOUS') NOT NULL DEFAULT 'ONLINE',
+--	`vote_type` enum('IN PERSON','ONLINE','PROXY IN PERSON','PROXY ONLINE','UNANIMOUS') NOT NULL DEFAULT 'ONLINE',
+	`vote_type` varchar(24) NOT NULL DEFAULT 'ONLINE',
 	`submitted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`submitter_id` integer NOT NULL,
 	PRIMARY KEY (`position`,`member_id`),
 	FOREIGN KEY (`position`) REFERENCES `positions` (`position`) ON DELETE CASCADE)
 ");
+	if (!$success)
+		return "Failed to set up database schema: " . $db->getError();
 
-	do {
-		if (mysqli_error($mysql))
-			return "Unable to set up tables: " . mysqli_error($mysql);
-	} while (mysqli_next_result($mysql) || mysqli_error($mysql));
-
-	$db = DBHandler::wrap($mysql);
 	$success = $user->login($params['flyers-user'], $params['flyers-password']);
 	if (!$success)
 		return "Login Failed";
 
 	$db->query("UPDATE members SET `pollworker`=TRUE where skymanager_id=" . ((int) $user->getUserId()));
-	if ($db->getError())
-		return "Failed to update user permissions";
+	if ($err = $db->getError())
+		return "Failed to update user permissions: $err";
 
-	$conf = json_encode([
-		'host' => $params['db-host'],
-		'user' => $params['db-username'],
-		'pass' => $params['db-password'],
-		'db'   => $params['db-database']
-	], JSON_PRETTY_PRINT);
+	$conf = "";
+	$conf = json_encode($config, JSON_PRETTY_PRINT);
 
 	
-	if (file_put_contents(BASE . "/inc/config.json", $conf) === false)
+	if (file_put_contents(BASE . "/inc/config/config.json", $conf) === false)
 		return "Failed to write configuration.";
 
 	return false;
 }
 
 $params = [];
-foreach ($required as $field) {
+foreach ($fieldNames as $field) {
 	if (array_key_exists($field, $_POST) && !empty($_POST[$field]))
 		$params[$field] = $_POST[$field];
 }
@@ -110,6 +120,19 @@ if ($error === false) {
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600;800&display=swap" />
 	<link rel="stylesheet" type="text/css" href="/styles/style.css" />
+	<style type="text/css">
+form input#db-sqlite:checked~.form-row label[for="db-sqlite"] .radio-button-label,
+form input#db-mysql:checked~.form-row label[for="db-mysql"] .radio-button-label {
+	background-color: #000;
+	color: #fff;
+	border: 2px solid #fff;
+	box-shadow: 0px 0px 0px 2px #000;
+}
+
+form .form-row.conditional { display: none; }
+form input#db-mysql:checked~.form-row.mysql { display: block; }
+
+	</style>
 </head>
 <body>
 	<div id="container">
@@ -122,20 +145,36 @@ if ($error === false) {
 				<?php if(!empty($error)) echo "<span class=\"errormessage\">$error</span>"; ?>
 				<form action="configure.php" method="POST">
 					<div class="form-section">
+						<input type="radio" id="db-sqlite" name="db-type" value="sqlite" checked />
+						<input type="radio" id="db-mysql" name="db-type" value="mysql" />
 						<h3>Database Setup</h3>
 						<div class="form-row">
+							<div class="selector">
+								<label class="radio" for="db-sqlite">
+									<span class="radio-button-label">SQLite</span>
+								</label>
+								<label class="radio" for="db-mysql">
+									<span class="radio-button-label">MySQL</span>
+								</label>
+							</div>
+						</div>
+						<div class="form-row conditional mysql">
 							<label for="db-host">Host</label>
 							<input type="text" id="db-host" name="db-host" value="localhost" />
 						</div>
-						<div class="form-row">
+						<div class="form-row conditional mysql">
+							<label for="db-host">Host</label>
+							<input type="text" id="db-host" name="db-host" value="localhost" />
+						</div>
+						<div class="form-row conditional mysql">
 							<label for="db-database">Database Name</label>
 							<input type="text" id="db-database" name="db-database" />
 						</div>
-						<div class="form-row">
+						<div class="form-row conditional mysql">
 							<label for="db-username">Username</label>
 							<input type="text" id="db-username" name="db-username" />
 						</div>
-						<div class="form-row">
+						<div class="form-row conditional mysql">
 							<label for="db-password">Password</label>
 							<input type="password" id="db-password" name="db-password" />
 						</div>

@@ -28,7 +28,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 
 	if (empty($error)) {
 		$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, \"$ballot\", $voter_selected, 'IN PERSON', $voter_selected UNION SELECT $candidate_selected, \"$ballot\", voting_id, 'PROXY IN PERSON', delegate_id from proxy where delegate_id=$voter_selected");
-		$candidate = $db->fetchRow('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where skymanager_id=' . $candidate_selected);
+		$candidate = $db->fetchRow('select skymanager_id, name, username, coalesce(email, "") as `gravatar_email` from members where skymanager_id=' . $candidate_selected);
 
 		if ($result) {
 			$proxy_votes = $db->fetchAssoc("SELECT member_id, submitter_id from votes where submitter_id=$voter_selected and position=\"$ballot\"");
@@ -57,8 +57,11 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$candidates = $db->fetchAssoc('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where voting_id is not null');
-$voters = $db->fetchAssoc('select MIN(skymanager_id) as `skymanager_id`, MIN(members.voting_id) as `voting_id`, MIN(name) as `name`, MIN(username) as `username`, group_concat(proxy.voting_id) as `proxies`, MIN(upstream_proxy.delegate_id) as `delegate`, md5(coalesce(MIN(email), "")) as `gravatar_hash` from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash` from members where members.voting_id is null');
+$candidates = $db->fetchAssoc('select skymanager_id, name, username, coalesce(email, "") as `gravatar_email` from members where voting_id is not null');
+$voters = $db->fetchAssoc('select MIN(skymanager_id) as `skymanager_id`, MIN(members.voting_id) as `voting_id`, MIN(name) as `name`, MIN(username) as `username`, group_concat(proxy.voting_id) as `proxies`, MIN(upstream_proxy.delegate_id) as `delegate`, coalesce(MIN(email), "") as `gravatar_email` from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, coalesce(email, "") as `gravatar_email` from members where members.voting_id is null');
+
+get_gravatar_assoc($candidates);
+get_gravatar_assoc($voters);
 ?>
 <script type="text/javascript">
 var voters = <?= json_encode($voters); ?>;
@@ -134,7 +137,7 @@ var candidates = <?= json_encode($candidates); ?>;
 		<h4 class="section-heading">Candidate</h4>
 		<div id="vote-profile" class="candidate">
 			<div class="profile-icon">
-				<img src="https://www.gravatar.com/avatar/<?= $candidate['gravatar_hash']; ?>.png?d=mp&s=64" />
+				<img src="https://www.gravatar.com/avatar/<?= md5($candidate['gravatar_email']); ?>.png?d=mp&s=64" />
 			</div>
 			<div class="profile">
 				<h2 class="profile-name"><?= $candidate['name']; ?></h2>

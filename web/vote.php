@@ -24,7 +24,7 @@ if (!$error) {
 	try {
 		$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, \"$ballot\", {$user->voterId()}, 'ONLINE', {$user->voterId()} UNION SELECT $candidate_selected, \"$ballot\", voting_id, 'PROXY ONLINE', delegate_id from proxy where delegate_id={$user->voterId()}");
 	} catch (Throwable $ignore) {}
-	$candidate = $db->fetchRow('select skymanager_id, name, username, md5(coalesce(email, "")) as `gravatar_hash` from members where skymanager_id=' . $candidate_selected);
+	$candidate = $db->fetchRow('select skymanager_id, name, username, coalesce(email, "") as `gravatar_email` from members where skymanager_id=' . $candidate_selected);
 	if ($result) {
 		$to = 'mf2022elec@gmail.com';
 		$from = 'noreply@tyzoid.com';
@@ -83,7 +83,7 @@ $header->output();
 		<h4 class="section-heading">Candidate</h4>
 		<div id="vote-profile" class="candidate">
 			<div class="profile-icon">
-				<img src="https://www.gravatar.com/avatar/<?= $candidate['gravatar_hash']; ?>.png?d=mp&s=64" />
+				<img src="https://www.gravatar.com/avatar/<?= md5($candidate['gravatar_email']); ?>.png?d=mp&s=64" />
 			</div>
 			<div class="profile">
 				<h2 class="profile-name"><?= $candidate['name']; ?></h2>

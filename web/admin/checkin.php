@@ -39,15 +39,17 @@ select
 	MIN(username) as `username`,
 	group_concat(proxy.voting_id) as `proxies`,
 	MIN(upstream_proxy.delegate_id) as `delegate`,
-	md5(coalesce(MIN(email), "")) as `gravatar_hash`
+	coalesce(MIN(email), "") as `gravatar_email`
 from members
 	left join proxy on (members.voting_id=proxy.delegate_id)
 	left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id)
 where members.voting_id is not null
 group by members.voting_id
 UNION
-select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, md5(coalesce(email, "")) as `gravatar_hash`
+select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, coalesce(email, "") as `gravatar_email`
 from members where members.voting_id is null');
+
+get_gravatar_assoc($voters);
 ?>
 <script type="text/javascript">
 var voters = <?= json_encode($voters); ?>;

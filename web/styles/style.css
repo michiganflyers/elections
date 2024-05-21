@@ -193,7 +193,7 @@ form div.selector label {
 	flex-grow: 1;
 }
 
-form label.radio input {
+form label.radio input, form input[type=radio] {
 	display: none;
 }
 
@@ -207,7 +207,7 @@ form label.radio .radio-button-label {
 	border-radius: 10px;
 }
 
-form label.radio input:checked+.radio-button-label {
+form label.radio input:checked+.radio-button-label, form input:checked+label.radio .radio-button-label {
 	background-color: #000;
 	color: #fff;
 	border: 2px solid #fff;

@@ -59,7 +59,8 @@ class User{
 		$this->loggedin = true;
 
 		// Create user automatically on login
-		$_ = $db->query('insert ignore into members (skymanager_id, name, username, email) VALUES (' . ((int) $this->uid) . ', "' . $db->sanitize($this->name) . '", "' . $db->sanitize($this->username) . '", ' . (empty($this->email) ? 'NULL' : '"' . $db->sanitize($this->email) . '"') . ')');
+		//$_ = $db->query('insert into members (skymanager_id, name, username, email) VALUES (' . ((int) $this->uid) . ', "' . $db->sanitize($this->name) . '", "' . $db->sanitize($this->username) . '", ' . (empty($this->email) ? 'NULL' : '"' . $db->sanitize($this->email) . '"') . ') ON DUPLICATE KEY UPDATE skymanager_id=skymanager_id');
+		$_ = $db->insert('members', ['skymanager_id', 'name', 'username', 'email'], [[((int) $this->uid), $this->name, $this->username, (empty($this->email) ? 'NULL' : $this->email)]], true);
 
 		// Get voter ID
 		$result = $db->fetchRow('select members.voting_id from members left join proxy on (members.voting_id=proxy.voting_id) where proxy.delegate_id is null and skymanager_id=' . ((int) $this->uid));
