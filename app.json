@@ -1,0 +1,6 @@
+{
+	"name": "Michigan Flyers Elections",
+	"description": "Election-handling system for hybrid in-person/online voting.",
+	"repository": "https://github.com/michiganflyers/elections",
+	"stack": "container"
+}
