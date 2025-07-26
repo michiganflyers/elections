@@ -15,10 +15,17 @@ session_start();
 // Database and Authentication
 require_once(BASE . '/inc/db.php');
 
-if ($config->type == "mysql")
-	$db = MysqlDb::Connect($config->host, $config->user, $config->pass, $config->db);
-else
-	$db = SqliteDb::Connect();
+switch ($config->type) {
+	case "mysql":
+		$db = MysqlDb::Connect($config->host, $config->user, $config->pass, $config->db);
+		break;
+	case "pgsql":
+		$db = PgsqlDb::Connect($config->connString);
+		break;
+	case "sqlite":
+	default:
+		$db = SqliteDb::Connect();
+}
 
 require_once(BASE . '/inc/user.php');
 require_once(BASE . '/inc/misc.php');

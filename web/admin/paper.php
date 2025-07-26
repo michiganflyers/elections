@@ -22,16 +22,18 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 	$voter_selected = (int) $_POST['voter'];
 	$ballot = $_POST['ballot'];
 
+	$position_code = $db->sanitize($ballot);
+
 	if ($candidate_selected != $_POST['candidate']) $error = "An eccor occurred while processing your ballot. Please retry.";
 	if ($voter_selected != $_POST['voter']) $error = "An eccor occurred while processing your ballot. Please retry.";
 	if (!array_key_exists($ballot, $positions)) $error = "An eccor occurred while processing your ballot. Please retry.";
 
 	if (empty($error)) {
-		$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, \"$ballot\", $voter_selected, 'IN PERSON', $voter_selected UNION SELECT $candidate_selected, \"$ballot\", voting_id, 'PROXY IN PERSON', delegate_id from proxy where delegate_id=$voter_selected");
-		$candidate = $db->fetchRow('select skymanager_id, name, username, coalesce(email, "") as `gravatar_email` from members where skymanager_id=' . $candidate_selected);
+		$result = $db->query("INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id) SELECT $candidate_selected, '$position_code', $voter_selected, 'IN PERSON', $voter_selected UNION SELECT $candidate_selected, '$position_code', voting_id, 'PROXY IN PERSON', delegate_id from proxy where delegate_id=$voter_selected");
+		$candidate = $db->fetchRow("select skymanager_id, name, username, coalesce(email, '') as gravatar_email from members where skymanager_id=$candidate_selected");
 
 		if ($result) {
-			$proxy_votes = $db->fetchAssoc("SELECT member_id, submitter_id from votes where submitter_id=$voter_selected and position=\"$ballot\"");
+			$proxy_votes = $db->fetchAssoc("SELECT member_id, submitter_id from votes where submitter_id=$voter_selected and position='$position_code'");
 			$num_affected_rows = count($proxy_votes);
 			if ($num_affected_rows > 1) {
 				$proxy_str = "";
@@ -57,8 +59,8 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$candidates = $db->fetchAssoc('select skymanager_id, name, username, coalesce(email, "") as `gravatar_email` from members where voting_id is not null');
-$voters = $db->fetchAssoc('select MIN(skymanager_id) as `skymanager_id`, MIN(members.voting_id) as `voting_id`, MIN(name) as `name`, MIN(username) as `username`, group_concat(proxy.voting_id) as `proxies`, MIN(upstream_proxy.delegate_id) as `delegate`, coalesce(MIN(email), "") as `gravatar_email` from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, coalesce(email, "") as `gravatar_email` from members where members.voting_id is null');
+$candidates = $db->fetchAssoc("select skymanager_id, name, username, coalesce(email, '') as gravatar_email from members where voting_id is not null");
+$voters = $db->fetchAssoc("select MIN(skymanager_id) as skymanager_id, MIN(members.voting_id) as voting_id, MIN(name) as name, MIN(username) as username, group_concat(proxy.voting_id) as proxies, MIN(upstream_proxy.delegate_id) as delegate, coalesce(MIN(email), '') as gravatar_email from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, '') as gravatar_email from members where members.voting_id is null");
 
 get_gravatar_assoc($candidates);
 get_gravatar_assoc($voters);

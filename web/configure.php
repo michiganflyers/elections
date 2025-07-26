@@ -2,6 +2,8 @@
 define('BASE', __DIR__);
 define('BASEURL', $_SERVER['SERVER_NAME']);
 
+$default_pg_connString = getenv('ELECTIONDB_URL');
+
 $config = json_decode(file_get_contents(BASE . "/inc/config.json"));
 if (!empty($config)) {
 	header('Location: /index.php');
@@ -14,21 +16,25 @@ require_once(BASE . '/inc/user.php');
 $fieldNames = ['db-type', 'db-host', 'db-username', 'db-password', 'db-database', 'flyers-user', 'flyers-password'];
 
 function test_config($params) {
-	global $fieldNames, $db, $user;
+	global $fieldNames, $db, $user, $default_pg_connString;
 
+	if (empty($params) || empty($params['flyers-user']) || empty($params['flyers-password']))
+		return "All fields are required";
+
+	if (empty($params['db-type']) && !empty($default_pg_connString)) {
+		$params['db-type'] = 'pgsql';
+		$params['db-connString'] = $default_pg_connString;
+	}
 
 	$config = [
 		"type" => $params['db-type']
 	];
 
-	if (empty($params['flyers-user']) || empty($params['flyers-password']))
-		return "All fields are required";
-
 	switch ($params['db-type']) {
 		case "mysql":
-			if (!empty($params) && count($params) != count($fieldNames))
+			if (count($params) != count($fieldNames))
 				return "All fields are required";
-			
+
 			$config += [
 				'host' => $params['db-host'],
 				'user' => $params['db-username'],
@@ -36,7 +42,17 @@ function test_config($params) {
 				'db'   => $params['db-database']
 			];
 
-			$db = MysqlDb::Connect($config->host, $config->user, $config->pass, $config->db);
+			$db = MysqlDb::Connect($config['host'], $config['user'], $config['pass'], $config['db']);
+			break;
+		case "pgsql":
+			if (empty($params['db-connString']))
+				return "All fields are required";
+
+			$config += [
+				'connString' => $params['db-connString']
+			];
+
+			$db = PgsqlDb::Connect($config['connString']);
 			break;
 		case "sqlite":
 			$db = SqliteDb::Connect();
@@ -45,53 +61,79 @@ function test_config($params) {
 			return "Invalid Database Type";
 	}
 
+	if (!$db)
+		return "Failed to connect to the database with the given configuration";
+
+	$success = $db->setup();
+	if (!$success)
+		return "Failed to perform database-specific initialization: " . $db->getError();
+
 	$success = $db->exec_multi("
-CREATE TABLE IF NOT EXISTS `members` (
-	`skymanager_id` integer NOT NULL PRIMARY KEY,
-	`name` varchar(128) NOT NULL,
-	`username` varchar(64) NOT NULL,
-	`voting_id` int DEFAULT NULL UNIQUE,
-	`email` varchar(128) DEFAULT NULL,
-	`pollworker` BOOLEAN NOT NULL DEFAULT false,
-	`checkedin` BOOLEAN NOT NULL DEFAULT false);
-
-CREATE TABLE IF NOT EXISTS `proxy` (
-	`voting_id` integer NOT NULL,
-	`delegate_id` integer NOT NULL,
-	PRIMARY KEY (`voting_id`, `delegate_id`));
-
-CREATE TABLE IF NOT EXISTS `positions` (
-	`position` varchar(64) NOT NULL PRIMARY KEY,
-	`description` varchar(128) NOT NULL UNIQUE,
-	`active` BOOLEAN NOT NULL DEFAULT false
+CREATE TABLE IF NOT EXISTS members (
+	skymanager_id INTEGER NOT NULL PRIMARY KEY,
+	name VARCHAR(128) NOT NULL,
+	username VARCHAR(64) NOT NULL,
+	voting_id int DEFAULT NULL UNIQUE,
+	email VARCHAR(128) DEFAULT NULL,
+	pollworker BOOLEAN NOT NULL DEFAULT false,
+	checkedin BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS `votes` (
-	`candidate_id` integer NOT NULL,
-	`position` varchar(64) NOT NULL,
-	`member_id` integer NOT NULL,
---	`vote_type` enum('IN PERSON','ONLINE','PROXY IN PERSON','PROXY ONLINE','UNANIMOUS') NOT NULL DEFAULT 'ONLINE',
-	`vote_type` varchar(24) NOT NULL DEFAULT 'ONLINE',
-	`submitted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`submitter_id` integer NOT NULL,
-	PRIMARY KEY (`position`,`member_id`),
-	FOREIGN KEY (`position`) REFERENCES `positions` (`position`) ON DELETE CASCADE)
+CREATE TABLE IF NOT EXISTS proxy (
+	voting_id INTEGER NOT NULL,
+	delegate_id INTEGER NOT NULL,
+	PRIMARY KEY (voting_id, delegate_id)
+);
+
+CREATE TABLE IF NOT EXISTS positions (
+	position VARCHAR(64) NOT NULL PRIMARY KEY,
+	description VARCHAR(128) NOT NULL UNIQUE,
+	active BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS votes (
+	candidate_id INTEGER NOT NULL,
+	position VARCHAR(64) NOT NULL,
+	member_id INTEGER NOT NULL,
+--	vote_type enum('IN PERSON','ONLINE','PROXY IN PERSON','PROXY ONLINE','UNANIMOUS') NOT NULL DEFAULT 'ONLINE',
+	vote_type VARCHAR(24) NOT NULL DEFAULT 'ONLINE',
+	submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	submitter_id INTEGER NOT NULL,
+	PRIMARY KEY (position, member_id),
+	FOREIGN KEY (position) REFERENCES positions (position) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS prevotes (
+	candidate_id INTEGER NOT NULL,
+	position VARCHAR(64) NOT NULL,
+	member_id INTEGER NOT NULL,
+	priority INTEGER NOT NULL,
+	submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (member_id, candidate_id, position)
+);
+
+CREATE TABLE IF NOT EXISTS candidates (
+	skymanager_id INTEGER NOT NULL,
+	position VARCHAR(64) NOT NULL,
+	statement TEXT NOT NULL,
+	FOREIGN KEY (skymanager_id) REFERENCES members (skymanager_id) ON DELETE CASCADE
+)
 ");
 	if (!$success)
 		return "Failed to set up database schema: " . $db->getError();
 
+	session_start();
 	$success = $user->login($params['flyers-user'], $params['flyers-password']);
 	if (!$success)
 		return "Login Failed";
 
-	$db->query("UPDATE members SET `pollworker`=TRUE where skymanager_id=" . ((int) $user->getUserId()));
+	$db->query("UPDATE members SET pollworker=TRUE where skymanager_id=" . ((int) $user->getUserId()));
 	if ($err = $db->getError())
 		return "Failed to update user permissions: $err";
 
 	$conf = "";
 	$conf = json_encode($config, JSON_PRETTY_PRINT);
 
-	
 	if (file_put_contents(BASE . "/inc/config/config.json", $conf) === false)
 		return "Failed to write configuration.";
 
@@ -106,7 +148,7 @@ foreach ($fieldNames as $field) {
 
 $error = null;
 if (!empty($params))
-		$error = test_config($params);
+	$error = test_config($params);
 
 if ($error === false) {
 	header('Location: /index.php');
@@ -122,6 +164,7 @@ if ($error === false) {
 	<link rel="stylesheet" type="text/css" href="/styles/style.css" />
 	<style type="text/css">
 form input#db-sqlite:checked~.form-row label[for="db-sqlite"] .radio-button-label,
+form input#db-pgsql:checked~.form-row label[for="db-pgsql"] .radio-button-label,
 form input#db-mysql:checked~.form-row label[for="db-mysql"] .radio-button-label {
 	background-color: #000;
 	color: #fff;
@@ -131,6 +174,7 @@ form input#db-mysql:checked~.form-row label[for="db-mysql"] .radio-button-label 
 
 form .form-row.conditional { display: none; }
 form input#db-mysql:checked~.form-row.mysql { display: block; }
+form input#db-pgsql:checked~.form-row.pgsql { display: block; }
 
 	</style>
 </head>
@@ -144,9 +188,11 @@ form input#db-mysql:checked~.form-row.mysql { display: block; }
 			<div class="page">
 				<?php if(!empty($error)) echo "<span class=\"errormessage\">$error</span>"; ?>
 				<form action="configure.php" method="POST">
+				<?php if (empty($default_pg_connString)): ?>
 					<div class="form-section">
 						<input type="radio" id="db-sqlite" name="db-type" value="sqlite" checked />
 						<input type="radio" id="db-mysql" name="db-type" value="mysql" />
+						<input type="radio" id="db-pgsql" name="db-type" value="pgsql" />
 						<h3>Database Setup</h3>
 						<div class="form-row">
 							<div class="selector">
@@ -156,11 +202,10 @@ form input#db-mysql:checked~.form-row.mysql { display: block; }
 								<label class="radio" for="db-mysql">
 									<span class="radio-button-label">MySQL</span>
 								</label>
+								<label class="radio" for="db-pgsql">
+									<span class="radio-button-label">PostgresQL</span>
+								</label>
 							</div>
-						</div>
-						<div class="form-row conditional mysql">
-							<label for="db-host">Host</label>
-							<input type="text" id="db-host" name="db-host" value="localhost" />
 						</div>
 						<div class="form-row conditional mysql">
 							<label for="db-host">Host</label>
@@ -178,7 +223,12 @@ form input#db-mysql:checked~.form-row.mysql { display: block; }
 							<label for="db-password">Password</label>
 							<input type="password" id="db-password" name="db-password" />
 						</div>
+						<div class="form-row conditional pgsql">
+							<label for="db-connString">Connection String</label>
+							<input type="text" id="db-connString" name="db-connString" value="" />
+						</div>
 					</div>
+				<?php endif; ?>
 					<div class="form-section">
 						<h3>Flyers Access Setup</h3>
 						<div class="form-row">

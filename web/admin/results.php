@@ -26,11 +26,11 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as `proxy` from members where checkedin=true UNION select voter.name, voter.username, voter.voting_id, members.voting_id as `proxy` from members inner join proxy on (proxy.delegate_id=members.voting_id) left join members as `voter` on (voter.voting_id=proxy.voting_id) where members.checkedin = true');
-$members = $db->fetchRow('select count(*) as `count` from members where voting_id is not null');
+$checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as proxy from members where checkedin=true UNION select voter.name, voter.username, voter.voting_id, members.voting_id as proxy from members inner join proxy on (proxy.delegate_id=members.voting_id) left join members as voter on (voter.voting_id=proxy.voting_id) where members.checkedin = true');
+$members = $db->fetchRow('select count(*) as count from members where voting_id is not null');
 $count = $members['count'];
 
-$results = $db->fetchAssoc('select votes.position, members.name, count(*) as `votes` from votes left join members on (votes.candidate_id=members.skymanager_id) group by candidate_id, position');
+$results = $db->fetchAssoc('select votes.position, members.name, count(*) as votes from votes left join members on (votes.candidate_id=members.skymanager_id) group by candidate_id, position, members.name');
 ?>
 <form>
 <div class="form-row">

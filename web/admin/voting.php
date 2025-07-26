@@ -27,20 +27,20 @@ function loadVoters() {
 
 	$voters = $db->fetchAssoc('
 	select
-		MIN(skymanager_id) as `skymanager_id`,
-		MIN(members.voting_id) as `voting_id`,
-		MIN(name) as `name`,
-		MIN(username) as `username`,
-		group_concat(proxy.voting_id) as `proxies`,
-		MIN(upstream_proxy.delegate_id) as `delegate`,
-		coalesce(MIN(email), "") as `gravatar_email`
+		MIN(skymanager_id) as skymanager_id,
+		MIN(members.voting_id) as voting_id,
+		MIN(name) as name,
+		MIN(username) as username,
+		group_concat(proxy.voting_id) as proxies,
+		MIN(upstream_proxy.delegate_id) as delegate,
+		coalesce(MIN(email), \'\') as gravatar_email
 	from members
 		left join proxy on (members.voting_id=proxy.delegate_id)
 		left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id)
 	where members.voting_id is not null
 	group by members.voting_id
 	UNION
-	select skymanager_id, voting_id, name, username, NULL as `proxies`, NULL as `delegate`, coalesce(email, "") as `gravatar_email`
+	select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, \'\') as gravatar_email
 	from members where members.voting_id is null');
 
 	get_gravatar_assoc($voters);
@@ -56,7 +56,7 @@ if (!empty($_POST['create'])) {
 	if (empty($code) || empty($desc)) $error = "Both code and description are required";
 
 	if (empty($error)) {
-		$result = $db->query('INSERT INTO positions (position, description) VALUES ("' . $db->sanitize($code) . '", "' . $db->sanitize($desc) . '")');
+		$result = $db->insert('positions', ['position', 'description'], [[$code, $desc]]);
 		if ($result === false)
 			$error = "That position already exists.";
 		else
@@ -75,7 +75,7 @@ if (!empty($_POST['create'])) {
 
 
 		if (empty($error)) {
-			$result = $db->query('UPDATE positions set active=(position="' . $db->sanitize($position) . '")');
+			$result = $db->query("UPDATE positions set active=(position='{$db->sanitize($position)}')");
 			if ($result === false)
 				$error = "Failed to set active position";
 			else if (empty($position))
@@ -93,7 +93,7 @@ if (!empty($_POST['create'])) {
 		if (!array_key_exists($_POST['ballot'], $positions)) $error = "That position does not exist";
 
 		if (empty($error)) {
-			$result = $db->query('DELETE FROM positions WHERE position="' . $db->sanitize($_POST['ballot']) . '"');
+			$result = $db->query("DELETE FROM positions WHERE position='{$db->sanitize($_POST['ballot'])}'");
 			if ($result === false)
 				$error = "Failed to remove position";
 			else

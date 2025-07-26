@@ -19,9 +19,9 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Online Ballot');
 $header->output();
 
-$candidates = $db->fetchAssoc('select skymanager_id, name, username, coalesce(email, "") as `gravatar_email` from members where voting_id is not null');
+$candidates = $db->fetchAssoc('select skymanager_id, name, username, coalesce(email, \'\') as gravatar_email from members where voting_id is not null');
 $votes = $db->fetchAssoc("select position from votes where member_id={$user->voterId()}");
-$position = $db->fetchRow("select position as code, description as label from positions where active<>0 limit 1");
+$position = $db->fetchRow("select position as code, description as label from positions where active != FALSE limit 1");
 
 get_gravatar_assoc($candidates);
 

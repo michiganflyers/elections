@@ -59,7 +59,6 @@ class User{
 		$this->loggedin = true;
 
 		// Create user automatically on login
-		//$_ = $db->query('insert into members (skymanager_id, name, username, email) VALUES (' . ((int) $this->uid) . ', "' . $db->sanitize($this->name) . '", "' . $db->sanitize($this->username) . '", ' . (empty($this->email) ? 'NULL' : '"' . $db->sanitize($this->email) . '"') . ') ON DUPLICATE KEY UPDATE skymanager_id=skymanager_id');
 		$_ = $db->insert('members', ['skymanager_id', 'name', 'username', 'email'], [[((int) $this->uid), $this->name, $this->username, (empty($this->email) ? 'NULL' : $this->email)]], true);
 
 		// Get voter ID
@@ -69,7 +68,8 @@ class User{
 		if ($result) {
 			$this->voterId = $result['voting_id'];
 			// Auto check in
-			$_ = $db->query('update members set checkedin=1 where voting_id is not null and skymanager_id=' . ((int) $this->uid));
+			// TODO: Only auto check-in after meeting is started (disabled for now)
+			//$_ = $db->query('update members set checkedin=TRUE where voting_id is not null and skymanager_id=' . ((int) $this->uid));
 		} else {
 			$this->voterId = null;
 		}
