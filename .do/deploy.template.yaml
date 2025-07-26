@@ -5,4 +5,10 @@ spec:
     git:
       repo_clone_url: https://github.com/michiganflyers/elections.git
       branch: main
-    dockerfile_path: Dockerfile
+    dockerfile_path: Containerfile
+    envs:
+    - key: ELECTIONDB_URL
+      scope: RUN_TIME
+      value: ${election-data.DATABASE_URL}
+  databases:
+  - name: election-data

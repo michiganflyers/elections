@@ -1,0 +1,21 @@
+{
+  auto_https off
+}
+
+:8080 {
+	root * /srv/web
+
+	@forbidden_htaccess {
+		path *.htaccess
+	}
+	respond @forbidden_htaccess 404
+
+	@blocked_inc {
+		path /inc/*
+		path /templates/*
+	}
+	respond @blocked_inc 403
+
+	php_fastcgi 127.0.0.1:9000
+	file_server
+}
