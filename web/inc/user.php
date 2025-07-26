@@ -33,7 +33,7 @@ class User{
 		];
 
 		$ctx = stream_context_create($opt);
-		$token = file_get_contents('https://beta.schedule.michiganflyers.org/api/oauth/token', false, $ctx);
+		$token = file_get_contents('https://beta.schedule.michiganflyers.club/api/oauth/token', false, $ctx);
 
 		if (!empty($token)) {
 			$_SESSION['token'] = json_decode($token)->access_token;
