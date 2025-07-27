@@ -13,6 +13,24 @@ if (!empty($config)) {
 require_once(BASE . '/inc/db.php');
 require_once(BASE . '/inc/user.php');
 
+// If there's a default connection string and a database already exists (with data)
+// Set configuration to that database and send back to homepage.
+// This can happen if we're operating in a hosted environment and a container restarts or spins up
+if (!empty($default_pg_connString)) {
+	$db = PgsqlDb::Connect($default_pg_connString);
+	if ($db && !empty($db->fetchRow("select skymanager_id from members limit 1"))) {
+		$conf = json_encode([
+			'type' => 'pgsql',
+			'connString' => $default_pg_connString
+		], JSON_PRETTY_PRINT);
+
+		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
+			header('Location: /index.php');
+			die();
+		}
+	}
+}
+
 $fieldNames = ['db-type', 'db-host', 'db-username', 'db-password', 'db-database', 'flyers-user', 'flyers-password'];
 
 function test_config($params) {
