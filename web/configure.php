@@ -151,7 +151,7 @@ if (!empty($params))
 	$error = test_config($params);
 
 if ($error === false) {
-	header('Location: /index.php');
+	header('Location: /admin/voting.php');
 	die();
 }
 
