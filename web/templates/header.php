@@ -6,17 +6,15 @@
  */
 class Header{
 	private $title = "Template";
-	private $scripts = array();
-	private $stylesheets = array(
-		"https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600;800&display=swap"
-	);
+	private $scripts = [];
+	private $stylesheets = [];
 
 	/*
 	 * The Attributes array. Holds data for the page.
 	 */
 	private $attributes = array(
 		"title"    => "Template",
-		"tagline"  => "A Tyzoid Production",
+		"tagline"  => "Default Tagline",
 		"showbar"  => true,
 		"loginbar" => ""
 	);
@@ -73,11 +71,11 @@ class Header{
 		$html .= "\t\t<title>" . $this->title . "</title>";
 
 		// Set mobile-friendly
-		$html .= '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />';
+		$html .= "<meta name=viewport content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\" />\n";
 
 		// Stylesheet import
 		foreach ($this->stylesheets as $style){
-			$html .= "\t\t<link rel=\"stylesheet\" type=\"text/css\" href=\"$style\" />\n";
+			$html .= "\t\t<link rel=stylesheet type=\"text/css\" href=\"$style\" />\n";
 		}
 
 		// Script import
@@ -90,10 +88,10 @@ class Header{
 		$html .= "\t<body>\n";
 
 		// Page layout
-		$html .= "\t\t<div id=\"container\">\n";
+		$html .= "\t\t<div id=container>\n";
 
 		// Login/Statusbar
-		$html .= "\t\t\t<div class=\"loginbar\">\n";
+		$html .= "\t\t\t<div class=loginbar>\n";
 		if ($user->loggedin()) {
 			$html .= "\t\t\t\t" . $user->name() . "\n";
 			$html .= "\t\t\t\t" . " <a href=\"/login.php?logout\">Log Out</a>\n";
@@ -109,13 +107,13 @@ class Header{
 		}
 		$html .= "\t\t\t</div>\n";
 
-		$html .= "\t\t\t<div class=\"header\">\n";
+		$html .= "\t\t\t<div class=header>\n";
 		$html .= "\t\t\t\t<h1>{$this->attributes['title']}</h1>\n";
 		$html .= "\t\t\t\t<h2>{$this->attributes['tagline']}</h2>\n";
 		$html .= "\t\t\t</div>\n";
 
-		$html .= "\t\t\t<div class=\"content\">\n";
-		$html .= "\t\t\t\t<div class=\"page\">\n";
+		$html .= "\t\t\t<div class=content>\n";
+		$html .= "\t\t\t\t<div class=page>\n";
 		//End divs should be closed in the footer template
 
 		if($return === true) return $html;
