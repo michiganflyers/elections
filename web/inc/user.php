@@ -64,7 +64,7 @@ class User{
 		// Get voter ID
 		$result = $db->fetchRow('select members.voting_id from members left join proxy on (members.voting_id=proxy.voting_id) where proxy.delegate_id is null and skymanager_id=' . ((int) $this->uid));
 
-		$admincheck = $db->fetchRow('select members.pollworker from members where skymanager_id=' . ((int) $this->uid));
+		$admincheck = $db->fetchRow('select members.permission_level from members where skymanager_id=' . ((int) $this->uid));
 		if ($result) {
 			$this->voterId = $result['voting_id'];
 			// Auto check in
@@ -75,7 +75,7 @@ class User{
 		}
 
 		if ($admincheck)
-			$this->role = $admincheck['pollworker'];
+			$this->role = min(2, max(0, (int) $admincheck['permission_level']));
 		else
 			$this->role = 0;
 
@@ -107,8 +107,12 @@ class User{
 	}
 
 	public function getRole(){
-		return $this->role ? 'admin' : 'voter';
-		//return $this->role;
+		return $this->role;
+	}
+
+	public function getRoleText(){
+		$roles = ['voter', 'pollworker', 'admin'];
+		return $roles[$this->role];
 	}
 
 	public function logout(){

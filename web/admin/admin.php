@@ -6,7 +6,7 @@ if (!$user->loggedin()) {
 	die();
 }
 
-if ($user->getRole() !== "admin") {
+if ($user->getRole() < 2) {
 	header('Location: /index.php');
 	die();
 }
@@ -62,26 +62,49 @@ if (!empty($_POST['create'])) {
 		else
 			$error = "Created position " . htmlspecialchars($desc);
 	}
-} else if (!empty($_POST['setActive']) || !empty($_POST['deactivate'])) {
+} else if (!empty($_POST['newState'])) {
 	if (!array_key_exists('ballot', $_POST)) {
 		$error = "No position selected";
 	} else {
 		$positions = loadPositions();
 
 		$position = $_POST['ballot'];
-		if (!array_key_exists($position, $positions)) $error = "That position does not exist";
-		if (!empty($_POST['deactivate']))
-			$position='';
 
+		$states = ['active', 'nominating', 'early'];
+		$newState = $_POST['newState'];
+
+		if (!in_array($newState, $states, true) && $newState !== 'none') $error = "Invalid position state '" . htmlspecialchars($newState) . "'";
+		if (!array_key_exists($position, $positions)) $error = "That position does not exist";
+
+		if (($index = array_search($newState, $states, true)) !== false) {
+			unset($states[$index]);
+		} else {
+			$newState = false;
+		}
 
 		if (empty($error)) {
-			$result = $db->query("UPDATE positions set active=(position='{$db->sanitize($position)}')");
-			if ($result === false)
-				$error = "Failed to set active position";
-			else if (empty($position))
-				$error = "Deactivated voting form";
-			else
-				$error = "Set " . htmlspecialchars($positions[$_POST['ballot']]['label']) . " as active.";
+			$position_san = $db->sanitize($position);
+			// Active state is a bit different, since only one position can be in active state.
+			if ($newState === 'active') {
+				$result = $db->query("UPDATE positions set nominating=(nominating AND NOT position='$position_san'), early=(early AND NOT position='$position_san'), active=(position='$position_san')");
+				if ($result === false)
+					$error = "Failed to set active position";
+				else
+					$error = "Set " . htmlspecialchars($positions[$_POST['ballot']]['label']) . " as active.";
+			} else {
+				$error = "Not Implemented";
+				$states_query = array_map(fn($state) => "$state=false", $states);
+				if (!empty($newState))
+					$states_query[] = "$newState=true";
+
+				$states_query = implode(', ', $states_query);
+
+				$result = $db->query("UPDATE positions set $states_query where position='$position_san'");
+				if ($result === false)
+					$error = "Failed to set position '" . htmlspecialchars($position) . "' to '" . (empty($newState) ? "Inactive" : ucfirst($newState)) . "'";
+				else
+					$error = "Set position '" . htmlspecialchars($position) . "' to '" . (empty($newState) ? "Inactive" : ucfirst($newState)) . "'";
+			}
 		}
 	}
 } else if (!empty($_POST['remove'])) {
@@ -148,7 +171,7 @@ $header->output();
 <script type="text/javascript">
 var voters = <?= json_encode($voters); ?>;
 </script>
-<form action="voting.php" method="POST">
+<form action="admin.php" method="POST">
 <?php if (!empty($error) || !empty($result)): ?>
 <div id="vote-result">
 	<div id="status" class="<?= $result ? "success" : "failure"; ?>"></div>
@@ -172,9 +195,10 @@ var voters = <?= json_encode($voters); ?>;
 		</div>
 	</div>
 	<div class="form-row split-button">
-		<input class="submit danger" type="submit" name="remove" value="Remove Position & Ballots" />
-		<input class="submit" type="submit" name="deactivate" value="Deactivate" />
-		<input class="submit" type="submit" name="setActive" value="Set Active" />
+		<input class="submit danger" type=submit name=remove value="Remove Position & Ballots" />
+		<button class="submit" type=submit name=newState value=none>Deactivate</button>
+		<button class="submit" type=submit name=newState value=nominating>Open Nominations</button>
+		<button class="submit" type=submit name=newState value=active>Open Voting</button>
 	</div>
 </div>
 <?php endif; ?>

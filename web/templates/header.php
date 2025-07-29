@@ -93,12 +93,16 @@ class Header{
 		// Login/Statusbar
 		$html .= "\t\t\t<div class=loginbar>\n";
 		if ($user->loggedin()) {
-			$html .= "\t\t\t\t" . $user->name() . "\n";
+			$html .= "\t\t\t\t" . htmlspecialchars($user->name()) . "\n";
+			$html .= "\t\t\t\t<span class=\"roletag {$user->getRoleText()}\">" . ucfirst($user->getRoleText()) . "</span>\n";
 			$html .= "\t\t\t\t" . " <a href=\"/login.php?logout\">Log Out</a>\n";
-			if ($user->getRole() === "admin") {
-				$html .= "\t\t\t\t" . " <a href=\"/admin/checkin.php\">Volunteer</a>\n";
-				$html .= "\t\t\t\t" . " <a href=\"/admin/voting.php\">Admin</a>\n";
-			}
+
+			if ($user->getRole() > 0)
+				$html .= "\t\t\t\t" . " <a href=\"/pollworker/checkin.php\">Volunteer</a>\n";
+
+			if ($user->getRole() > 1)
+				$html .= "\t\t\t\t" . " <a href=\"/admin/admin.php\">Admin</a>\n";
+
 			$html .= "\t\t\t\t<a href=\"/index.php\">Home</a>\n";
 		} else if (basename($_SERVER['PHP_SELF']) != 'login.php') {
 			$html .= "\t\t\t\t<a href=\"/login.php\">Log In</a>\n";

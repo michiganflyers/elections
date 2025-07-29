@@ -6,7 +6,7 @@ if (!$user->loggedin()) {
 	die();
 }
 
-if ($user->getRole() !== "admin") {
+if ($user->getRole() < 1) {
 	header('Location: /index.php');
 	die();
 }
@@ -59,7 +59,7 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$candidates = $db->fetchAssoc("select skymanager_id, name, username, coalesce(email, '') as gravatar_email from members where voting_id is not null");
+$candidates = db_get_candidates();
 $voters = $db->fetchAssoc("select MIN(skymanager_id) as skymanager_id, MIN(members.voting_id) as voting_id, MIN(name) as name, MIN(username) as username, group_concat(proxy.voting_id) as proxies, MIN(upstream_proxy.delegate_id) as delegate, coalesce(MIN(email), '') as gravatar_email from members left join proxy on (members.voting_id=proxy.delegate_id) left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id) where members.voting_id is not null group by members.voting_id UNION select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, '') as gravatar_email from members where members.voting_id is null");
 
 get_gravatar_assoc($candidates);
@@ -74,7 +74,7 @@ var candidates = <?= json_encode($candidates); ?>;
 	<div class="selector">
 		<label class="radio">
 			<input type="radio" name="button" value="ci" />
-			<a class="radio-button-label" href="/admin/checkin.php">Check-In</a>
+			<a class="radio-button-label" href="/pollworker/checkin.php">Check-In</a>
 		</label>
 		<label class="radio">
 			<input type="radio" name="button" value="pe" checked />
@@ -82,13 +82,15 @@ var candidates = <?= json_encode($candidates); ?>;
 		</label>
 		<label class="radio">
 			<input type="radio" name="button" value="re" />
-			<a class="radio-button-label" href="/admin/results.php">Results</a>
+			<a class="radio-button-label" href="/pollworker/results.php">Results</a>
 		</label>
 	</div>
 </div>
 <?php if (empty($positions)): ?>
 <h3>No positions are open for voting.</h3>
-<a href="/admin/voting.php">Create a position</a>
+<?php if ($user->getRole() > 1): ?>
+<a href="/admin/admin.php">Create a position</a>
+<?php endif; ?>
 <?php else: ?>
 <div class="form-row">
 	<div class="selector">

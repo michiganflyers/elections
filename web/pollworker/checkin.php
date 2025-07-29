@@ -6,7 +6,7 @@ if (!$user->loggedin()) {
 	die();
 }
 
-if ($user->getRole() !== "admin") {
+if ($user->getRole() < 1) {
 	header('Location: /index.php');
 	die();
 }
@@ -63,11 +63,11 @@ var voters = <?= json_encode($voters); ?>;
 		</label>
 		<label class="radio">
 			<input type="radio" name="button" value="pe" />
-			<a class="radio-button-label" href="/admin/paper.php">Paper Entry</a>
+			<a class="radio-button-label" href="/pollworker/paper.php">Paper Entry</a>
 		</label>
 		<label class="radio">
 			<input type="radio" name="button" value="re" />
-			<a class="radio-button-label" href="/admin/results.php">Results</a>
+			<a class="radio-button-label" href="/pollworker/results.php">Results</a>
 		</label>
 	</div>
 </div>

@@ -3,7 +3,7 @@
 define('BASE', dirname(__DIR__));
 define('BASEURL', $_SERVER['SERVER_NAME']);
 
-$config = json_decode(file_get_contents(BASE . "/inc/config/config.json"));
+$config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"));
 if (empty($config)) {
 	header('Location: /configure.php');
 	die();
@@ -27,6 +27,7 @@ switch ($config->type) {
 		$db = SqliteDb::Connect();
 }
 
+require_once(BASE . '/inc/db_func.php');
 require_once(BASE . '/inc/user.php');
 require_once(BASE . '/inc/misc.php');
 

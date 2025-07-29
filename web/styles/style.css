@@ -4,7 +4,7 @@ body, html{
 	padding:0px;
 	margin:0px;
 
-    font-family: 'Fira Sans', sans-serif;
+	font-family: 'Fira Sans', sans-serif;
 	font-size:20px;
 	color: #000;
 }
@@ -43,6 +43,18 @@ div.loginbar {
 	font-size: 0.75rem;
 	border-bottom:1px solid #000;
 	color:#fff;
+}
+
+div.loginbar .roletag {
+	margin: 4px;
+	height: 20px;
+	line-height: 20px;
+	padding: 3px 10px;
+	display: inline-block;
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	background-color: rgba(255, 255, 255, 0.2);
+	border-radius: 5px;
+	display: none; /* Not really all that useful, TODO: Remove in future */
 }
 
 div.loginbar a {
@@ -176,7 +188,7 @@ li.candidate {
 	content: 'ID: ';
 }
 
-form, form input {
+form, form input, form button, form textarea {
 	font-size: 1rem;
 }
 
@@ -289,11 +301,15 @@ form .form-section:before { border-width: 4px 0 0 0; }
 form .form-section:after { border-width: 0 0 4px 0; }
 */
 
-form input {
+form input, form button, form textarea {
 	box-sizing: border-box;
 	width: 100%;
 	display:block;
 	padding: 10px;
+}
+
+form textarea {
+	min-height: 5rem;
 }
 
 form .split-button {
@@ -301,53 +317,56 @@ form .split-button {
 	flex-direction: row;
 	align-content: stretch;
 	gap: 20px;
+	flex-wrap: wrap;
 }
 
-form .split-button > input {
+form .split-button > input, form .split-button > button {
 	flex-grow: 1;
+	width: min-content;
 }
 
-input[type=submit] {
+input[type="submit"], button[type="submit"] {
 	background: linear-gradient(#eee,#e7e7e7);
 	border: 1px solid rgba(0,0,0,.2);
 	border-radius: 3px;
 }
 
 
-input[type=submit].danger {
+input[type=submit].danger, button[type="submit"].danger {
 	background: linear-gradient(#900, #800);
 	color: #fff;
 	font-weight: bold;
 }
 
-input[type=submit]:hover { background: linear-gradient(#ddd,#d7d7d7); }
-input[type=submit].danger:hover { background: linear-gradient(#800,#700); }
+input[type=submit]:hover, button[type="submit"]:hover { background: linear-gradient(#ddd,#d7d7d7); }
+input[type=submit].danger:hover, button[type="submit"].danger:hover { background: linear-gradient(#800,#700); }
 
+.defaultHide { display: none; }
 
 /* latin */
 @font-face {
-  font-family: 'Fira Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(/styles/firasans-v17-latin-400.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+	font-family: 'Fira Sans';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/styles/firasans-v17-latin-400.woff2) format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 /* latin */
 @font-face {
-  font-family: 'Fira Sans';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url(/styles/firasans-v17-latin-600.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+	font-family: 'Fira Sans';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(/styles/firasans-v17-latin-600.woff2) format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 /* latin */
 @font-face {
-  font-family: 'Fira Sans';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url(/styles/firasans-v17-latin-800.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+	font-family: 'Fira Sans';
+	font-style: normal;
+	font-weight: 800;
+	font-display: swap;
+	src: url(/styles/firasans-v17-latin-800.woff2) format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }

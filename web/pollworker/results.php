@@ -6,7 +6,7 @@ if (!$user->loggedin()) {
 	die();
 }
 
-if ($user->getRole() !== "admin") {
+if ($user->getRole() < 1) {
 	header('Location: /index.php');
 	die();
 }
@@ -37,11 +37,11 @@ $results = $db->fetchAssoc('select votes.position, members.name, count(*) as vot
 	<div class="selector">
 		<label class="radio">
 			<input type="radio" name="button" value="ci" />
-			<a class="radio-button-label" href="/admin/checkin.php">Check-In</a>
+			<a class="radio-button-label" href="/pollworker/checkin.php">Check-In</a>
 		</label>
 		<label class="radio">
 			<input type="radio" name="button" value="pe" />
-			<a class="radio-button-label" href="/admin/paper.php">Paper Entry</a>
+			<a class="radio-button-label" href="/pollworker/paper.php">Paper Entry</a>
 		</label>
 		<label class="radio">
 			<input type="radio" name="button" value="re" checked />

@@ -4,7 +4,7 @@ define('BASEURL', $_SERVER['SERVER_NAME']);
 
 $default_pg_connString = getenv('ELECTIONDB_URL');
 
-$config = json_decode(file_get_contents(BASE . "/inc/config.json"));
+$config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"));
 if (!empty($config)) {
 	header('Location: /index.php');
 	die();
@@ -91,9 +91,9 @@ CREATE TABLE IF NOT EXISTS members (
 	skymanager_id INTEGER NOT NULL PRIMARY KEY,
 	name VARCHAR(128) NOT NULL,
 	username VARCHAR(64) NOT NULL,
-	voting_id int DEFAULT NULL UNIQUE,
+	voting_id INTEGER DEFAULT NULL UNIQUE,
 	email VARCHAR(128) DEFAULT NULL,
-	pollworker BOOLEAN NOT NULL DEFAULT false,
+	permission_level INTEGER NOT NULL DEFAULT 0,
 	checkedin BOOLEAN NOT NULL DEFAULT false
 );
 
@@ -106,7 +106,9 @@ CREATE TABLE IF NOT EXISTS proxy (
 CREATE TABLE IF NOT EXISTS positions (
 	position VARCHAR(64) NOT NULL PRIMARY KEY,
 	description VARCHAR(128) NOT NULL UNIQUE,
-	active BOOLEAN NOT NULL DEFAULT false
+	active BOOLEAN NOT NULL DEFAULT false,
+	nominating BOOLEAN NOT NULL DEFAULT false,
+	early BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS votes (
@@ -145,7 +147,7 @@ CREATE TABLE IF NOT EXISTS candidates (
 	if (!$success)
 		return "Login Failed";
 
-	$db->query("UPDATE members SET pollworker=TRUE where skymanager_id=" . ((int) $user->getUserId()));
+	$db->query("UPDATE members SET permission_level=2 where skymanager_id=" . ((int) $user->getUserId()));
 	if ($err = $db->getError())
 		return "Failed to update user permissions: $err";
 
@@ -169,7 +171,7 @@ if (!empty($params))
 	$error = test_config($params);
 
 if ($error === false) {
-	header('Location: /admin/voting.php');
+	header('Location: /admin/admin.php');
 	die();
 }
 
