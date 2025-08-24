@@ -1,7 +1,7 @@
 <?php
 include('inc/inc.php');
 
-if (!$user->loggedin()) { 
+if (!$user->loggedin()) {
 	header('Location: /login.php');
 	die();
 }

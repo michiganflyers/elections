@@ -1,7 +1,6 @@
 <?php
 function db_get_candidates() {
 	global $db;
-	//return $db->fetchAssoc("select skymanager_id, name, username, coalesce(email, '') as gravatar_email from members where voting_id is not null");
 	return $db->fetchAssoc("select candidates.skymanager_id, position, statement, name, username, coalesce(email, '') as gravatar_email from candidates INNER JOIN members on (candidates.skymanager_id=members.skymanager_id)");
 }
 
