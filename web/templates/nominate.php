@@ -1,10 +1,10 @@
 <?php
 $positions = db_get_nominating_positions();
 $candidates = db_get_candidates();
+
 if ($candidates)
 	$candidates = array_filter($candidates, fn($row) => $row['skymanager_id'] === $user->getUserId());
 get_gravatar_assoc($candidates);
-$positions[0]['first'] = true;
 ?>
 <script type="text/javascript">
 var candidates = <?= json_encode($candidates); ?>;
@@ -16,9 +16,9 @@ var positions = <?= json_encode($positions); ?>;
 	<h3>Self-Nominate For:</h3>
 	<div class="form-row">
 		<div class="selector">
-		<?php foreach ($positions as $position): ?>
+		<?php foreach ($positions as $index => $position): ?>
 			<label class="radio">
-				<input type="radio" id="nominate-<?= $position['code'] ?>" name="nominate" value="<?= $position['code'] ?>" <?= !empty($position['first']) ? 'checked' : '' ?> />
+				<input type="radio" id="nominate-<?= $position['code'] ?>" name="nominate" value="<?= $position['code'] ?>" <?= ($index === 0) ? 'checked' : '' ?> />
 				<span class="radio-button-label"><?= $position['label'] ?></span>
 			</label>
 		<?php endforeach; ?>
