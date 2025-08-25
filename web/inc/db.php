@@ -24,8 +24,15 @@ class MysqlDb {
 		$handler = new MysqlDb();
 
 		mysqli_report(MYSQLI_REPORT_OFF);
-		$handler->mysql = mysqli_connect($hostname, $username, $password);
-		if (!$handler->mysql) return false;
+		$handler->mysql = mysqli_init();
+		if (!$handler->mysql)
+			return false;
+
+		if (!mysqli_options($handler->mysql, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, true))
+			return false;
+
+		if (!mysqli_real_connect($handler->mysql, $hostname, $username, $password))
+			return false;
 
 		mysqli_select_db($handler->mysql, $database);
 		if (mysqli_error($handler->mysql))
@@ -78,7 +85,7 @@ class MysqlDb {
 			do {
 				if ($err = $this->getError())
 					return false;
-			} while (mysqli_next_result($this->mysqli) || $this->getError());
+			} while (mysqli_next_result($this->mysql) || $this->getError());
 			return true;
 		} catch (Throwable $err) {
 			return false;

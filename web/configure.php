@@ -3,6 +3,7 @@ define('BASE', __DIR__);
 define('BASEURL', $_SERVER['SERVER_NAME']);
 
 $default_pg_connString = getenv('ELECTIONDB_URL');
+$default_mysql_db = getenv('ELECTIONDB_MYSQL');
 
 $config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"));
 if (!empty($config)) {
@@ -22,6 +23,25 @@ if (!empty($default_pg_connString)) {
 		$conf = json_encode([
 			'type' => 'pgsql',
 			'connString' => $default_pg_connString
+		], JSON_PRETTY_PRINT);
+
+		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
+			header('Location: /index.php');
+			die();
+		}
+	}
+}
+
+if (!empty($default_mysql_db)) {
+	$props = json_decode($default_mysql_db);
+	$db = MysqlDb::Connect($props->hostname, $props->username, $props->password, $props->database);
+	if ($db && !empty($db->fetchRow("select skymanager_id from members limit 1"))) {
+		$conf = json_encode([
+			'type' => 'mysql',
+			'host' => $props->hostname,
+			'user' => $props->username,
+			'pass' => $props->password,
+			'db'   => $props->database
 		], JSON_PRETTY_PRINT);
 
 		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
