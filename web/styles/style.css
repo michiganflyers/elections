@@ -19,6 +19,10 @@ h3, h4, h5, h6 {
 	font-weight: 600;
 }
 
+textarea {
+	font-family: inherit;
+}
+
 span.errormessage {
 	color: #c00;
 	padding: 10px 0px;
