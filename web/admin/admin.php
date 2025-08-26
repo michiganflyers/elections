@@ -198,6 +198,7 @@ var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
 		<input class="submit danger" type=submit name=remove value="Remove Position & Ballots" />
 		<button class="submit" type=submit name=newState value=none>Deactivate</button>
 		<button class="submit" type=submit name=newState value=nominating>Open Nominations</button>
+		<button class="submit" type=submit name=newState value=early>Open Early Voting</button>
 		<button class="submit" type=submit name=newState value=active>Open Voting</button>
 	</div>
 </div>
