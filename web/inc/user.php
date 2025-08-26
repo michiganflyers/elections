@@ -17,6 +17,22 @@ class User{
 	}
 
 	public function login($username, $password){
+		$rtConfig = db_get_runtime_config();
+
+		// Testing code to allow demos
+		if ($rtConfig['testAccounts'] === 'true' && $password === 'test') {
+			$data = [
+				"preferred_username" => $username . '_test',
+				"name" => ucfirst($username) . " Test",
+				"sub"  => hexdec(substr(sha1($username), 0, 7)),
+				"email" => "$username@example.net"
+			];
+
+			$_SESSION['token'] = '.' . base64_encode(json_encode($data)) . '.';
+			return $this->parseToken($_SESSION['token']);
+		}
+		// end testing code
+
 		$data = http_build_query([
 			'username' => $username,
 			'password' => $password,

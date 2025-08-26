@@ -3,15 +3,16 @@ $positions = db_get_nominating_positions();
 $candidates = db_get_candidates();
 
 if ($candidates)
-	$candidates = array_filter($candidates, fn($row) => $row['skymanager_id'] === $user->getUserId());
+	$candidates = array_values(array_filter($candidates, fn($row) => $row['skymanager_id'] === $user->getUserId()));
+
 get_gravatar_assoc($candidates);
 ?>
 <script type="text/javascript">
 var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
 var positions = <?= json_encode($positions, JSON_HEX_TAG); ?>;
 </script>
-<form action="nominate.php" method="POST">
 <?php if (!empty($positions)): ?>
+<form action="nominate.php" method="POST">
 <div class="form-section">
 	<h3>Self-Nominate For:</h3>
 	<div class="form-row">
@@ -34,6 +35,7 @@ var positions = <?= json_encode($positions, JSON_HEX_TAG); ?>;
 		<button class="defaultHide submit"        id=nominate type=submit name=action value=nominate>Nominate</button>
 	</div>
 </div>
+</form>
 <script type="text/javascript">
 function processCheckBoxes(evt) {
 	if (!this.checked)

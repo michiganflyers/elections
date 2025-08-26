@@ -12,6 +12,7 @@ if (!empty($config)) {
 }
 
 require_once(BASE . '/inc/db.php');
+require_once(BASE . '/inc/db_func.php');
 require_once(BASE . '/inc/user.php');
 
 // If there's a default connection string and a database already exists (with data)
@@ -54,7 +55,7 @@ if (!empty($default_mysql_db)) {
 $fieldNames = ['db-type', 'db-host', 'db-username', 'db-password', 'db-database', 'flyers-user', 'flyers-password'];
 
 function test_config($params) {
-	global $fieldNames, $db, $user, $default_pg_connString;
+	global $fieldNames, $db, $user, $default_pg_connString, $default_mysql_db;
 
 	if (empty($params) || empty($params['flyers-user']) || empty($params['flyers-password']))
 		return "All fields are required";
@@ -62,6 +63,13 @@ function test_config($params) {
 	if (empty($params['db-type']) && !empty($default_pg_connString)) {
 		$params['db-type'] = 'pgsql';
 		$params['db-connString'] = $default_pg_connString;
+	} elseif (empty($params['db-type']) && !empty($default_mysql_db)) {
+		$props = json_decode($default_mysql_db);
+		$params['db-type'] = 'mysql';
+		$params['db-host'] = $props->hostname;
+		$params['db-username'] = $props->username;
+		$params['db-password'] = $props->password;
+		$params['db-database'] = $props->database;
 	}
 
 	$config = [
@@ -126,16 +134,20 @@ CREATE TABLE IF NOT EXISTS proxy (
 CREATE TABLE IF NOT EXISTS positions (
 	position VARCHAR(64) NOT NULL PRIMARY KEY,
 	description VARCHAR(128) NOT NULL UNIQUE,
-	active BOOLEAN NOT NULL DEFAULT false,
-	nominating BOOLEAN NOT NULL DEFAULT false,
-	early BOOLEAN NOT NULL DEFAULT false
+	state SMALLINT NOT NULL DEFAULT 0,
+	-- States:
+	-- 0 Inactive/Closed
+	-- 1 Nominating
+	-- 2 Early Voting
+	-- 3 Active Voting
+	ctime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	rtime TIMESTAMP DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS votes (
 	candidate_id INTEGER NOT NULL,
 	position VARCHAR(64) NOT NULL,
 	member_id INTEGER NOT NULL,
---	vote_type enum('IN PERSON','ONLINE','PROXY IN PERSON','PROXY ONLINE','UNANIMOUS') NOT NULL DEFAULT 'ONLINE',
 	vote_type VARCHAR(24) NOT NULL DEFAULT 'ONLINE',
 	submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	submitter_id INTEGER NOT NULL,
@@ -149,15 +161,28 @@ CREATE TABLE IF NOT EXISTS prevotes (
 	member_id INTEGER NOT NULL,
 	priority INTEGER NOT NULL,
 	submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (member_id, candidate_id, position)
+	PRIMARY KEY (member_id, candidate_id, position),
+
+	FOREIGN KEY (member_id) REFERENCES members (skymanager_id) ON DELETE CASCADE,
+	FOREIGN KEY (position) REFERENCES positions (position) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS candidates (
 	skymanager_id INTEGER NOT NULL,
 	position VARCHAR(64) NOT NULL,
 	statement TEXT NOT NULL,
-	FOREIGN KEY (skymanager_id) REFERENCES members (skymanager_id) ON DELETE CASCADE
-)
+
+	PRIMARY KEY (skymanager_id, position),
+	FOREIGN KEY (skymanager_id) REFERENCES members (skymanager_id) ON DELETE CASCADE,
+	FOREIGN KEY (position) REFERENCES positions (position) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS runtimeconfig (
+	parameter VARCHAR(64) NOT NULL PRIMARY KEY,
+	value TEXT NOT NULL DEFAULT ''
+);
+
+INSERT INTO runtimeconfig (parameter, value) VALUES ('testAccounts', 'false')
 ");
 	if (!$success)
 		return "Failed to set up database schema: " . $db->getError();
@@ -228,7 +253,7 @@ form input#db-pgsql:checked~.form-row.pgsql { display: block; }
 			<div class="page">
 				<?php if(!empty($error)) echo "<span class=\"errormessage\">$error</span>"; ?>
 				<form action="configure.php" method="POST">
-				<?php if (empty($default_pg_connString)): ?>
+				<?php if (empty($default_pg_connString) && empty($default_mysql_db)): ?>
 					<div class="form-section">
 						<input type="radio" id="db-sqlite" name="db-type" value="sqlite" checked />
 						<input type="radio" id="db-mysql" name="db-type" value="mysql" />
