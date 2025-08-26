@@ -169,7 +169,7 @@ $header->output();
 
 ?>
 <script type="text/javascript">
-var voters = <?= json_encode($voters); ?>;
+var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
 </script>
 <form action="admin.php" method="POST">
 <?php if (!empty($error) || !empty($result)): ?>

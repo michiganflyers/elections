@@ -52,7 +52,7 @@ from members where members.voting_id is null');
 get_gravatar_assoc($voters);
 ?>
 <script type="text/javascript">
-var voters = <?= json_encode($voters); ?>;
+var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
 </script>
 <form action="checkin.php" method="POST">
 <div class="form-row">

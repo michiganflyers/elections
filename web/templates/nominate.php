@@ -7,8 +7,8 @@ if ($candidates)
 get_gravatar_assoc($candidates);
 ?>
 <script type="text/javascript">
-var candidates = <?= json_encode($candidates); ?>;
-var positions = <?= json_encode($positions); ?>;
+var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
+var positions = <?= json_encode($positions, JSON_HEX_TAG); ?>;
 </script>
 <form action="nominate.php" method="POST">
 <?php if (!empty($positions)): ?>

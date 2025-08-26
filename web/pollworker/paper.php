@@ -66,8 +66,8 @@ get_gravatar_assoc($candidates);
 get_gravatar_assoc($voters);
 ?>
 <script type="text/javascript">
-var voters = <?= json_encode($voters); ?>;
-var candidates = <?= json_encode($candidates); ?>;
+var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
+var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
 </script>
 <form action="paper.php" method="POST">
 <div class="form-row">
