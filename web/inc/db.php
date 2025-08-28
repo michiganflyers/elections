@@ -298,7 +298,7 @@ LANGUAGE sql IMMUTABLE STRICT AS $$
   SELECT grp_concat_int(state, val, \',\')
 $$;
 
-CREATE AGGREGATE group_concat(integer) (
+CREATE OR REPLACE AGGREGATE group_concat(integer) (
   SFUNC    = grp_concat_int_default,
   STYPE    = text,
   INITCOND = \'\'
