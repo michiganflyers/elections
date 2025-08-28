@@ -17,6 +17,8 @@ if ($incomplete_form || $not_nominating) {
 }
 
 $requested = reset($requested);
+if (!empty($_POST['statement']))
+	$_POST['statement'] = str_replace("\r", "", $_POST['statement']);
 
 if ($_POST['action'] === 'withdraw') {
 	$result = $db->query("DELETE FROM candidates WHERE skymanager_id=" . (int) $user->getUserId() . " AND position='{$db->sanitize($_POST['nominate'])}'");
