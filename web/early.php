@@ -7,7 +7,7 @@ if (!$user->loggedin()) {
 }
 
 $result = null;
-if (!empty($_POST['ballot'])) {
+if (!empty($_POST['ballot']) && !empty($_POST['action'])) {
 	$ranks = [];
 	$position = $_POST['ballot'];
 	for ($i = 1; $i <= 5; $i++) {
@@ -22,18 +22,25 @@ if (!empty($_POST['ballot'])) {
 	}
 
 	// First, delete prevotes where they exist for this position.
-	if (!empty($_POST['update'])) {
-		// $db->query("DELETE FROM prevotes WHERE position='{$db->sanitize($position)}' AND member_id={$db->getUserId()}");
+	if ($_POST['action'] === 'withdraw' || $_POST['action'] === 'update') {
+		$result = $db->query("DELETE FROM prevotes WHERE position='{$db->sanitize($position)}' AND member_id={$user->getUserId()}");
+		if ($result)
+			$error = 'Withdrew early votes';
+		else
+			$error = 'Failed to withdraw ballot';
 	}
 
-	$result = $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
-	if ($result) {
-		$error = 'Early votes successfully submitted';
-
-		$positions = db_get_early_positions();
-		$candidates = db_get_candidates();
-		$requested = reset(array_filter($positions, fn($row) => $row['code'] === $_POST['ballot']));
+	if ($_POST['action'] !== 'withdraw') {
+		$result = $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
+		if ($result)
+			$error = 'Early votes successfully submitted';
+		else
+			$error = 'Ballot already cast';
 	}
+
+	$positions = db_get_early_positions();
+	$candidates = db_get_candidates();
+	$requested = reset(array_filter($positions, fn($row) => $row['code'] === $_POST['ballot']));
 }
 
 $header = new Header("Michigan Flyers Election");
@@ -51,7 +58,7 @@ $header->output();
 	</div>
 </div>
 <a href="/" id="vote-again">Return to Early Voting</a>
-<?php if ($result): ?>
+<?php if ($result && $_POST['action'] !== 'withdraw'): ?>
 <div id="ballot">
 	<div class="ballot-section">
 		<h4 class="section-heading">Position</h4>

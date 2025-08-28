@@ -10,6 +10,12 @@ function db_get_current_user_votes() {
 	return $db->fetchAssoc("select position from votes where member_id={$user->voterId()}");
 }
 
+function db_get_current_user_early_votes() {
+	global $db;
+	global $user;
+	return $db->fetchAssoc("select candidate_id, position, priority from prevotes where member_id={$user->getUserId()}");
+}
+
 function db_get_runtime_config() {
 	global $db;
 	static $runtimeConfig;

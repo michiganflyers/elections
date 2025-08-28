@@ -1,6 +1,9 @@
 <?php
 $positions = db_get_early_positions();
 $candidates = db_get_candidates();
+$earlyvotes = db_get_current_user_early_votes();
+//if (!$earlyvotes)
+//	$earlyvotes = [];
 
 get_gravatar_assoc($candidates);
 
@@ -11,6 +14,7 @@ shuffle($candidates);
 <script type="text/javascript">
 var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
 var positions = <?= json_encode($positions, JSON_HEX_TAG); ?>;
+var votes = <?= json_encode($earlyvotes, JSON_HEX_TAG); ?>;
 </script>
 <form action="early.php" method="POST">
 <?php if (!empty($positions)): ?>
@@ -51,6 +55,7 @@ function selectBallot(evt) {
 
 	var position = this.value;
 	var availableCandidates = candidates.filter(candidate => candidate.position === position);
+	var currentVotes = votes.filter(vote => vote.position === position).reduce((acc, cur) => Object.assign(acc, {[cur.candidate_id]: cur.priority}), {});
 
 	var statementSection = document.getElementById('statements');
 	var statementList = document.createDocumentFragment();
@@ -131,6 +136,9 @@ function selectBallot(evt) {
 			checkbox.type = 'checkbox';
 			checkbox.name = 'rank-' + i;
 			checkbox.value = candidate.skymanager_id;
+			if (currentVotes[candidate.skymanager_id] && currentVotes[candidate.skymanager_id] === i)
+				checkbox.checked = true;
+
 			checkbox.addEventListener('change', function() {
 				console.log(this);
 				if (!this.checked)
@@ -147,45 +155,22 @@ function selectBallot(evt) {
 		rankingList.appendChild(rankRow);
 	});
 
+	var updateButton = document.getElementById('update');
+	var submitButton = document.getElementById('vote');
+	var withdrawButton = document.getElementById('withdraw');
+
 	statementSection.replaceChildren(statementList);
 	rankingSection.replaceChildren(rankingList);
 
-/*
-	var existing_nomination = candidates.filter(candidate => candidate.position === position);
-
-	var text = "";
-	if (existing_nomination.length && existing_nomination[0].statement)
-		text = existing_nomination[0].statement;
-
-	var statementTextBox = document.getElementById('statement');
-	var oldCode = statementTextBox.dataset.position;
-	var from_nomination = candidates.filter(candidate => candidate.position === oldCode);
-	var mismatch = ((from_nomination.length && from_nomination[0].statement) || "") != statementTextBox.value;
-	var confirmText = "Unsaved: Are you sure you want to discard changes to your ballot?";
-	if (!mismatch || position === oldCode || (mismatch && window.confirm(confirmText))) {
-		// Switch textarea contents
-		statementTextBox.value = text;
-		statementTextBox.dataset.position = position;
-
-		var withdrawButton = document.getElementById('withdraw');
-		var updateButton = document.getElementById('update');
-		var nominateButton = document.getElementById('nominate');
-
-		// Update buttons
-		if (text) withdrawButton.style.display = 'block';
-		else      withdrawButton.style.display = 'none';
-
-		if (text) updateButton.style.display = 'block';
-		else      updateButton.style.display = 'none';
-
-		if (!text) nominateButton.style.display = 'block';
-		else       nominateButton.style.display = 'none';
+	if (Object.keys(currentVotes).length > 0) {
+		updateButton.style.display = 'block';
+		withdrawButton.style.display = 'block';
+		submitButton.style.display = 'none';
 	} else {
-		// Undo switching position
-		this.checked = false;
-		document.getElementById("nominate-" + oldCode).checked = true;
+		updateButton.style.display = 'none';
+		withdrawButton.style.display = 'none';
+		submitButton.style.display = 'block';
 	}
-*/
 }
 
 document.querySelectorAll("input[type=radio][name=ballot]").forEach(elem => elem.addEventListener('change', selectBallot));
