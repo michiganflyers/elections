@@ -11,7 +11,7 @@ if (!$user->voterId()) {
 	die();
 }
 
-$active_position = $db->fetchRow("select position as code, description as label from positions where active != FALSE limit 1");
+$active_position = db_get_active_position();
 $candidate_selected = (int) $_POST['candidate'];
 $ballot = $_POST['ballot'];
 

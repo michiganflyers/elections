@@ -11,7 +11,7 @@ if ($user->getRole() < 1) {
 	die();
 }
 
-$_pos = $db->fetchAssoc("select position as code, description as label from positions");
+$_pos = db_get_positions();
 $positions = [];
 foreach ($_pos as $position)
 	$positions[$position['code']] = $position['label'];
@@ -25,7 +25,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {
 	$position_code = $db->sanitize($ballot);
 
 	if ($candidate_selected != $_POST['candidate']) $error = "An eccor occurred while processing your ballot. Please retry.";
-	if ($voter_selected != $_POST['voter']) $error = "An eccor occurred while processing your ballot. Please retry.";
+	if ($voter_selected != $_POST['voter'] || empty($voter_selected)) $error = "An eccor occurred while processing your ballot. Please retry.";
 	if (!array_key_exists($ballot, $positions)) $error = "An eccor occurred while processing your ballot. Please retry.";
 
 	if (empty($error)) {
@@ -153,7 +153,7 @@ var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
 		<h4 class="section-heading">Voter ID</h4>
 		<h4 id="ballot-voter-id">#<?= $voter_selected; ?></h4>
 	</div>
-<?php if ($proxy_str): ?>
+<?php if (!empty($proxy_str)): ?>
 	<div class="ballot-section">
 		<h4 class="section-heading">Proxy Votes</h4>
 		<h4 id="ballot-voter-id"><?= $proxy_str; ?></h4>

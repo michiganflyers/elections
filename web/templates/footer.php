@@ -35,7 +35,7 @@ class Footer{
 	public function output($return = false){
 		// End Content/page div
 		$html  = "\t\t\t\t</div>\n";
-		$html  = "\t\t\t</div>\n";
+		$html .= "\t\t\t</div>\n";
 
 		// Footer content
 		/*

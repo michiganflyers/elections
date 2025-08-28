@@ -1,5 +1,8 @@
 $(function(){
-	function isMatch(candidate, text) {
+	function isMatch(candidate, text, ballot) {
+		if (ballot !== undefined && candidate.position !== ballot)
+			return false;
+
 		if (candidate.name.toLowerCase().includes(text))
 			return true;
 
@@ -57,12 +60,12 @@ $(function(){
 		return li;
 	}
 
-	function search(text) {
+	function search(text, ballot) {
 		var list = document.createElement('ul');
 
 		var matches = 0;
 		for (var i = 0; text.length > 0 && i < candidates.length; i++) {
-			if (isMatch(candidates[i], text.toLowerCase())) {
+			if (isMatch(candidates[i], text.toLowerCase(), ballot)) {
 				list.appendChild(createChild(candidates[i]));
 				if (++matches > 4)
 					break;
@@ -79,5 +82,5 @@ $(function(){
 	}
 
 	//$('#searchbox').bind('change keypress keydown keyup', function() { search(this.value); });
-	$('#searchbox').bind('textInput input', function() { search(this.value); });
+	$('#searchbox').bind('textInput input', function() { search(this.value, this.form.ballot?.value ?? undefined); });
 });

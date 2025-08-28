@@ -12,19 +12,30 @@ if (!$user->loggedin()) {
 }
 */
 
+$active = db_get_active_position();
+$nominate = db_get_nominating_positions();
+$early = db_get_early_positions();
+
+$tagline = "Online Election Platform";
+if (!empty($nominate))
+	$tagline = "Candidate Self-Nomination";
+elseif (!empty($early))
+	$tagline = "Early Voting";
+elseif (!empty($active))
+	$tagline = "Online Ballot";
+
 $header = new Header("Michigan Flyers Election");
 $header->addStyle("/styles/style.css");
 $header->addScript("/js/jquery-1.11.3.min.js");
 $header->addScript("/js/search.js");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', 'Online Ballot');
+$header->setAttribute('tagline', $tagline);
 $header->output();
-
-$active = db_get_active_position();
-$nominate = db_get_nominating_positions();
 ?>
 <?php if (!empty($nominate)): ?>
 	<?php include(BASE . '/templates/nominate.php'); ?>
+<?php elseif (!empty($early)): ?>
+	<?php include(BASE . '/templates/early.php'); ?>
 <?php elseif (!$user->voterId()): ?>
 	<h3>Your account is not marked as eligible to vote.</h3>
 	<p>Please see the voting administrator if this is an error.</p>

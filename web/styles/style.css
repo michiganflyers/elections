@@ -6,6 +6,7 @@ body, html{
 
 	font-family: 'Fira Sans', sans-serif;
 	font-size:20px;
+	line-height: 1.2;
 	color: #000;
 }
 
@@ -138,7 +139,7 @@ div.selected.candidate.voter::before {
 	content: 'Selected Voter';
 }
 
-form .form-row:nth-child(2n+1) div.selected.candidate::before {
+.form-row:nth-child(2n+1) div.selected.candidate::before {
 	background-color: #eee;
 }
 
@@ -192,7 +193,7 @@ li.candidate {
 	content: 'ID: ';
 }
 
-form, form input, form button, form textarea {
+form, form input, form button, form textarea, form select {
 	font-size: 1rem;
 }
 
@@ -266,24 +267,24 @@ form label.radio:hover div.hover-tooltip {
 	opacity: 1;
 }
 
-form .form-row {
+.form-row {
 	padding: 10px 20px;
 	margin: 0px -20px;
 }
 
-form .form-row:nth-child(2n+1 of .form-row) {
+.form-row:nth-child(2n+1 of .form-row) {
 	background-color: #eee;
 }
 
-form .form-section > .form-row {
+.form-section > .form-row, .form-section > section > .form-row {
 	border-left: 4px solid #6ac;
 }
 
-form .form-section {
+.form-section {
 	margin-bottom: 20px;
 }
 
-form .form-section h3 {
+.form-section h3 {
 	background-color: #6ac;
 	color: #fff;
 	margin: 0px -20px;
@@ -293,7 +294,7 @@ form .form-section h3 {
 }
 
 /*
-form .form-section:before, form .form-section:after {
+.form-section:before, .form-section:after {
 	content: '';
 	display: block;
 	border: 0px solid #6ac;
@@ -301,8 +302,8 @@ form .form-section:before, form .form-section:after {
 	margin-left: -20px;
 }
 
-form .form-section:before { border-width: 4px 0 0 0; }
-form .form-section:after { border-width: 0 0 4px 0; }
+.form-section:before { border-width: 4px 0 0 0; }
+.form-section:after { border-width: 0 0 4px 0; }
 */
 
 form input, form button, form textarea {
@@ -346,6 +347,39 @@ input[type=submit]:hover, button[type="submit"]:hover { background: linear-gradi
 input[type=submit].danger:hover, button[type="submit"].danger:hover { background: linear-gradient(#800,#700); }
 
 .defaultHide { display: none; }
+
+/* Early Voting - profiles and personal statements */
+section#statements .statement {
+	white-space: pre-wrap;
+}
+
+section#statements .candidate {
+	border: 0px;
+	margin: 1rem 0px;
+}
+
+section#ranking {
+	display: grid;
+	grid-template-columns: 1fr repeat(5, max-content);
+	margin-top: 0.3rem;
+}
+
+section#ranking .form-row.ranking {
+	display: grid;
+	grid-template-columns: subgrid;
+	grid-column: 1 / -1;
+	grid-row: auto;
+}
+
+section#ranking .rank-header {
+	text-align: center;
+	font-weight: bold;
+}
+
+section#ranking .rank-header .name-column {
+	text-align: left;
+}
+
 
 /* latin */
 @font-face {
