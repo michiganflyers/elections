@@ -180,12 +180,15 @@ CREATE TABLE IF NOT EXISTS candidates (
 CREATE TABLE IF NOT EXISTS runtimeconfig (
 	parameter VARCHAR(64) NOT NULL PRIMARY KEY,
 	value TEXT NOT NULL DEFAULT ''
-);
-
-INSERT INTO runtimeconfig (parameter, value) VALUES ('testAccounts', 'false')
+)
 ");
+
 	if (!$success)
 		return "Failed to set up database schema: " . $db->getError();
+
+	$success = $db->insert('runtimeconfig', ['parameter', 'value'], [['testAccounts', 'false']], true);
+	if (!$success)
+		return "Failed to insert initial data: " . $db->getError();
 
 	session_start();
 	$success = $user->login($params['flyers-user'], $params['flyers-password']);
