@@ -82,6 +82,18 @@ if (!empty($_POST['create'])) {
 				$error = "Removed " . htmlspecialchars($_POST['ballot']);
 		}
 	}
+} else if (!empty($_POST['restore'])) {
+	if (!array_key_exists('ballot', $_POST)) {
+		$error = "No position selected";
+	} else {
+		if (empty($error)) {
+			$result = $db->query("UPDATE positions SET rtime=NULL WHERE position='{$db->sanitize($_POST['ballot'])}'");
+			if ($result === false)
+				$error = "Failed to restore position";
+			else
+				$error = "Restored " . htmlspecialchars($_POST['ballot']);
+		}
+	}
 } else if (!empty($_POST['purge'])) {
 	if (!array_key_exists('ballot', $_POST)) {
 		$error = "No position selected";
