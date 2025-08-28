@@ -130,6 +130,7 @@ function selectBallot(evt) {
 			var checkbox = document.createElement('input');
 			checkbox.type = 'checkbox';
 			checkbox.name = 'rank-' + i;
+			checkbox.value = candidate.skymanager_id;
 			checkbox.addEventListener('change', function() {
 				console.log(this);
 				if (!this.checked)

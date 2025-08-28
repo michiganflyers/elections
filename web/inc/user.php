@@ -22,7 +22,7 @@ class User{
 		// Testing code to allow demos
 		if ($rtConfig['testAccounts'] === 'true' && $password === 'test') {
 			$data = [
-				"preferred_username" => $username,
+				"preferred_username" => $username . '_test',
 				"name" => ucfirst($username) . " Test",
 				"sub"  => hexdec(substr(sha1($username), 0, 7)),
 				"email" => "$username@example.net"
