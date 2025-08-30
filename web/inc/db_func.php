@@ -69,7 +69,8 @@ function db_get_active_position() {
 	if (!$results || !count($results))
 		return false;
 
-	return array_intersect_key($results[0], array_flip(['code', 'label']));
+	$result = reset($results);
+	return array_intersect_key($result, array_flip(['code', 'label']));
 }
 
 function db_get_nominating_positions() {
