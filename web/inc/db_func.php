@@ -37,8 +37,19 @@ function db_get_positions() {
 	global $db;
 	static $positions;
 
-	if (!$positions)
+	$states = [
+		'Inactive/Closed',
+		'Nominating',
+		'Early Voting',
+		'Active Voting'
+	];
+
+	if (!$positions) {
 		$positions = $db->fetchAssoc("select position as code, description as label, state from positions where rtime is null order by ctime asc");
+		foreach ($positions as &$position) {
+			$position['state_name'] = $states[$position['state']];
+		}
+	}
 
 	return $positions;
 }
