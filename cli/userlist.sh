@@ -2,7 +2,9 @@
 read -p "Skymanager Username: " username
 read -sp "Skymanager Password: " password; echo
 
-token="$(curl -vvv 'https://umflyers.skymanager.com/Home/LogIn?ReturnUrl=%2f' -X POST -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode  "Username=$username" --data-urlencode "Password=$password" --data-urlencode "RememberMe=false" 2>&1 | grep -o 'Set-Cookie: .ASPXAUTH[^;]*' | cut -f2- -d' ')";
+mkdir -p tmp;
+
+curl -s 'https://umflyers.skymanager.com/Home/LogIn?ReturnUrl=%2f' -X POST -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode  "Username=$username" --data-urlencode "Password=$password" --data-urlencode "RememberMe=false" -c tmp/cookies.dat
 
 . process.sh
 
@@ -25,11 +27,10 @@ while getopts "hr" opt; do
 done
 
 if ! $reprocess; then
-	mkdir -p tmp
 	pushd tmp
 	for letter in {A..Z}; do 
 		printf "%s\n" $letter >&2;
-		curl -s "https://umflyers.skymanager.com/Roster/Letter/$letter" -H "Cookie: $token" \
+		curl -s "https://umflyers.skymanager.com/Roster/Letter/$letter" -b cookies.dat \
 			| tee "raw-$letter.html" | process
 	done | tee ../results.json > /dev/null
 
