@@ -2,24 +2,69 @@
 $positions = db_get_early_positions();
 $candidates = db_get_candidates();
 $earlyvotes = db_get_current_user_early_votes();
+$proxylist = db_get_proxylist();
 //if (!$earlyvotes)
 //	$earlyvotes = [];
 
 get_gravatar_assoc($candidates);
+get_gravatar_assoc($proxylist);
 
 // Shuffle candidates using userid as seed
 mt_srand($user->getUserId());
 shuffle($candidates);
 ?>
 <script type="text/javascript">
+var search_list = <?= json_encode($proxylist, JSON_HEX_TAG); ?>;
 var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
 var positions = <?= json_encode($positions, JSON_HEX_TAG); ?>;
 var votes = <?= json_encode($earlyvotes, JSON_HEX_TAG); ?>;
 </script>
 <form action="early.php" method="POST">
+<div class="form-section">
+	<h3>Proxy Instructions</h3>
+	<div class="form-row">
+		<p>Please ensure you fill out all sections of this proxy card.
+		Submit your proxy card for one position before moving on to the next.</p>
+
+		<p>The bylaws of the Michigan Flyers require voting by proxy to have a named proxy
+		(article V paragraph F). You may choose to have your proxy carried by the members
+		of the election committee which will guarantee your directed proxy vote be counted
+		(they will be in attendance with account in good standing).</p>
+
+		<p>Alternately, you can select to specify the member you which to proxy your vote.
+		If you do, please ensure the member you are selecting will be present and with an account
+		in good standing.</p>
+	</div>
+</div>
+<div class="form-section proxy-election">
+	<h3>Proxy Election</h3>
+	<input type=radio name=proxy-election id=proxy-default value=default <?= $user->proxyId() == 0 ? 'checked' : ''; ?> />
+	<input type=radio name=proxy-election id=proxy-named value=named <?= $user->proxyId() == 0 ? '' : 'checked'; ?> />
+	<div class="form-row">
+		<div class="selector">
+			<label class=radio for=proxy-default>
+				<span class=radio-button-label>Default Proxy</span>
+			</label>
+			<label class=radio for=proxy-named>
+				<span class=radio-button-label>Choose a Member</span>
+			</label>
+		</div>
+	</div>
+	<div class="form-row conditional proxy-default">
+		Default Proxy Selection: Austin Cirulli (Vice President &amp; Election Committe Member)
+	</div>
+	<div class="form-row conditional proxy-named">
+		<input type="text" placeholder="Proxy Search" id="searchbox" name="searchbox" value="" />
+		<div id="results"></div>
+		<input type="hidden" name="proxy-member-id" id="candidate-input" value="<?= $user->proxyId(); ?>" />
+		<div id="selectedCandidate" class="selected candidate proxy">
+			<span class="placeholder">No Proxy Selected</span>
+		</div>
+	</div>
+</div>
 <?php if (!empty($positions)): ?>
 <div class="form-section">
-	<h3>Select Ballot:</h3>
+	<h3>Select Position:</h3>
 	<div class="form-row">
 		<div class="selector">
 		<?php foreach ($positions as $index => $position): ?>
@@ -42,12 +87,24 @@ var votes = <?= json_encode($earlyvotes, JSON_HEX_TAG); ?>;
 		<em>Position 1 gets your vote if eligible. If not, then position 2, etc.</em>
 	</div>
 	<section id=ranking></section>
+</div>
+<div class="form-section">
+	<h3>Proxy Card Signature</h3>
+	<div class=form-row>
+		<p>By checking the box below, I, <?= htmlspecialchars($user->name()); ?>, a voting member of University of Michigan Flyers, Inc., appoint the proxy named above as my lawful agent to vote on my behalf at the annual member meeting, exactly as I have directed above, and to abstain on all other elections and matters before the membership. This directed proxy revokes any prior proxy I have given.</p>
+		<p>By checking this box, I provide my electronic signature to validate and submit this proxy.</p>
+		<label>
+			<input required type=checkbox name=proxy-signature class=regular value=agree />
+			I sign this proxy card.
+		</label>
+	</div>
 	<div class="form-row split-button">
-		<button class="defaultHide submit danger" id=withdraw type=submit name=action value=withdraw>Withdraw Ballot</button>
-		<button class="defaultHide submit"        id=update   type=submit name=action value=update>Update Ballot</button>
-		<button class="submit"                    id=vote type=submit name=action value=vote>Submit Ballot</button>
+		<button class="defaultHide submit danger" id=withdraw type=submit name=action value=withdraw>Withdraw Proxy Card</button>
+		<button class="defaultHide submit"        id=update   type=submit name=action value=update>Update Proxy Card</button>
+		<button class="submit"                    id=vote type=submit name=action value=vote>Submit Proxy Card</button>
 	</div>
 </div>
+</form>
 <script type="text/javascript">
 function selectBallot(evt) {
 	if (!this.checked)

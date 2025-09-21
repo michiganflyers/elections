@@ -20,7 +20,7 @@ $tagline = "Online Election Platform";
 if (!empty($nominate))
 	$tagline = "Candidate Self-Nomination";
 elseif (!empty($early))
-	$tagline = "Early Voting";
+	$tagline = "Proxy Card";
 elseif (!empty($active))
 	$tagline = "Online Ballot";
 

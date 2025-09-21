@@ -4,6 +4,11 @@ function db_get_candidates() {
 	return $db->fetchAssoc("select candidates.skymanager_id, position, statement, name, username, coalesce(email, '') as gravatar_email from candidates INNER JOIN members on (candidates.skymanager_id=members.skymanager_id)");
 }
 
+function db_get_proxylist() {
+	global $db;
+	return $db->fetchAssoc("select skymanager_id, name, username, coalesce(email, '') as gravatar_email from members");
+}
+
 function db_get_current_user_votes() {
 	global $db;
 	global $user;

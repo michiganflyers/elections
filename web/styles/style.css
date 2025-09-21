@@ -135,9 +135,8 @@ div.selected.candidate::before {
 	text-align: center;
 }
 
-div.selected.candidate.voter::before {
-	content: 'Selected Voter';
-}
+div.selected.candidate.proxy::before { content: 'Selected Proxy'; }
+div.selected.candidate.voter::before { content: 'Selected Voter'; }
 
 .form-row:nth-child(2n+1) div.selected.candidate::before {
 	background-color: #eee;
@@ -313,6 +312,11 @@ form input, form button, form textarea {
 	padding: 10px;
 }
 
+form input[type=checkbox].regular {
+	width: auto;
+	display: inline-block;
+}
+
 form textarea {
 	min-height: 5rem;
 }
@@ -380,6 +384,17 @@ section#ranking .rank-header .name-column {
 	text-align: left;
 }
 
+form .form-section.proxy-election input#proxy-default:checked~.form-row label[for="proxy-default"] .radio-button-label,
+form .form-section.proxy-election input#proxy-named:checked~.form-row label[for="proxy-named"] .radio-button-label {
+	background-color: #000;
+	color: #fff;
+	border: 2px solid #fff;
+	box-shadow: 0px 0px 0px 2px #000;
+}
+
+form .form-section.proxy-election .form-row.conditional { display: none; }
+form .form-section.proxy-election input#proxy-default:checked~.form-row.proxy-default { display: block; }
+form .form-section.proxy-election input#proxy-named:checked~.form-row.proxy-named { display: block; }
 
 /* latin */
 @font-face {

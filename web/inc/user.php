@@ -7,6 +7,7 @@ class User{
 	private $name = "";
 	private $uid = -1;
 	private $voterId = -1;
+	private $proxyId = -1;
 	private $loggedin = false;
 	private $role = 0;
 
@@ -78,16 +79,19 @@ class User{
 		$_ = $db->insert('members', ['skymanager_id', 'name', 'username', 'email'], [[((int) $this->uid), $this->name, $this->username, (empty($this->email) ? 'NULL' : $this->email)]], true);
 
 		// Get voter ID
-		$result = $db->fetchRow('select members.voting_id from members left join proxy on (members.voting_id=proxy.voting_id) where proxy.delegate_id is null and skymanager_id=' . ((int) $this->uid));
+		//$result = $db->fetchRow('select members.voting_id from members left join proxy on (members.voting_id=proxy.voting_id) where proxy.delegate_id is null and skymanager_id=' . ((int) $this->uid));
+		$result = $db->fetchRow('select voting_id, proxy_id from members where skymanager_id=' . ((int) $this->uid));
 
 		$admincheck = $db->fetchRow('select members.permission_level from members where skymanager_id=' . ((int) $this->uid));
 		if ($result) {
 			$this->voterId = $result['voting_id'];
+			$this->proxyId = $result['proxy_id'];
 			// Auto check in
 			// TODO: Only auto check-in after meeting is started (disabled for now)
 			//$_ = $db->query('update members set checkedin=TRUE where voting_id is not null and skymanager_id=' . ((int) $this->uid));
 		} else {
 			$this->voterId = null;
+			$this->proxyId = null;
 		}
 
 		if ($admincheck)
@@ -108,6 +112,10 @@ class User{
 
 	public function voterId(){
 		return $this->voterId;
+	}
+
+	public function proxyId(){
+		return $this->proxyId;
 	}
 
 	public function email(){

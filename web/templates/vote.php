@@ -4,7 +4,7 @@ $candidates = db_get_candidates();
 get_gravatar_assoc($candidates);
 ?>
 <script type="text/javascript">
-var candidates = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
+var search_list = <?= json_encode($candidates, JSON_HEX_TAG); ?>;
 </script>
 <form action="vote.php" method="POST">
 <div class="form-row">

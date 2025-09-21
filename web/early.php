@@ -7,7 +7,7 @@ if (!$user->loggedin()) {
 }
 
 $result = null;
-if (!empty($_POST['ballot']) && !empty($_POST['action'])) {
+if (!empty($_POST['ballot']) && !empty($_POST['action']) && !empty($_POST['proxy-signature'])) {
 	$ranks = [];
 	$position = $_POST['ballot'];
 	for ($i = 1; $i <= 5; $i++) {
@@ -21,33 +21,47 @@ if (!empty($_POST['ballot']) && !empty($_POST['action'])) {
 		}
 	}
 
+	// Update proxy selection
+	$proxy_member_id = 0;
+	if (!empty($_POST['proxy-member-id']) && $_POST['proxy-election'] !== 'default')
+		$proxy_member_id = (int) $_POST['proxy-member-id'];
+
+	$user_id = (int) $user->getUserId();
+	$result = $db->query("UPDATE members set proxy_id=$proxy_member_id where skymanager_id=$user_id");
+	if ($result)
+		$error = 'Set proxy information';
+	else
+		$error = 'Failed to set proxy member';
+
 	// First, delete prevotes where they exist for this position.
-	if ($_POST['action'] === 'withdraw' || $_POST['action'] === 'update') {
+	if ($result && $_POST['action'] === 'withdraw' || $_POST['action'] === 'update') {
 		$result = $db->query("DELETE FROM prevotes WHERE position='{$db->sanitize($position)}' AND member_id={$user->getUserId()}");
 		if ($result)
-			$error = 'Withdrew early votes';
+			$error = 'Withdrew proxy card';
 		else
-			$error = 'Failed to withdraw ballot';
+			$error = 'Failed to withdraw proxy card. Please retry or email the election committee at election2025@michiganflyers.club';
 	}
 
-	if ($_POST['action'] !== 'withdraw') {
+	if ($result && $_POST['action'] !== 'withdraw') {
 		$result = $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
 		if ($result)
-			$error = 'Early votes successfully submitted';
+			$error = 'Proxy card successfully submitted';
 		else
-			$error = 'Ballot already cast';
+			$error = 'Proxy card submission already exists';
 	}
 
 	$positions = db_get_early_positions();
 	$candidates = db_get_candidates();
 	$requested = reset(array_filter($positions, fn($row) => $row['code'] === $_POST['ballot']));
+} else if (!empty($_POST['ballot']) && !empty($_POST['action']) && empty($_POST['proxy-signature'])) {
+	$error = 'You must sign the proxy card.';
 }
 
 $header = new Header("Michigan Flyers Election");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/vote.css");
 $header->setAttribute('title', 'Michigan Flyers');
-$header->setAttribute('tagline', 'Online Ballot');
+$header->setAttribute('tagline', 'Proxy Card');
 $header->output();
 ?>
 <div id="vote-result">
@@ -57,7 +71,7 @@ $header->output();
 			"Failure") ?>
 	</div>
 </div>
-<a href="/" id="vote-again">Return to Early Voting</a>
+<a href="/" id="vote-again">Return to Directed Proxy Card</a>
 <?php if ($result && $_POST['action'] !== 'withdraw'): ?>
 <div id="ballot">
 	<div class="ballot-section">
