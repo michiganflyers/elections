@@ -27,6 +27,8 @@ COPY web       /srv/web
 COPY container/Caddyfile /etc/caddy/Caddyfile
 COPY container/php-fpm-pool.conf /etc/php84/php-fpm.d/www.conf
 
+RUN date +%s > /srv/web/inc/config/timestamp.txt
+
 RUN mkdir -p /etc/services.d/php-fpm /etc/services.d/caddy && \
     printf '%s\n' '#!/usr/bin/with-contenv sh' \
                   'exec php-fpm84 --nodaemonize -R' \

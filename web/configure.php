@@ -5,6 +5,8 @@ define('BASEURL', $_SERVER['SERVER_NAME']);
 $default_pg_connString = getenv('ELECTIONDB_URL');
 $default_mysql_db = getenv('ELECTIONDB_MYSQL');
 
+$timestamp = (int) @file_get_contents(BASE . "/inc/config/timestamp.txt");
+
 $config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"));
 if (!empty($config)) {
 	header('Location: /index.php');
@@ -23,7 +25,8 @@ if (!empty($default_pg_connString)) {
 	if ($db && !empty($db->fetchRow("select skymanager_id from members limit 1"))) {
 		$conf = json_encode([
 			'type' => 'pgsql',
-			'connString' => $default_pg_connString
+			'connString' => $default_pg_connString,
+			'timestamp' => $timestamp
 		], JSON_PRETTY_PRINT);
 
 		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
@@ -42,7 +45,8 @@ if (!empty($default_mysql_db)) {
 			'host' => $props->hostname,
 			'user' => $props->username,
 			'pass' => $props->password,
-			'db'   => $props->database
+			'db'   => $props->database,
+			'timestamp' => $timestamp
 		], JSON_PRETTY_PRINT);
 
 		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
@@ -73,7 +77,8 @@ function test_config($params) {
 	}
 
 	$config = [
-		"type" => $params['db-type']
+		"type" => $params['db-type'],
+		'timestamp' => $timestamp
 	];
 
 	switch ($params['db-type']) {

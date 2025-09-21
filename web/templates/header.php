@@ -61,6 +61,9 @@ class Header{
 
 	public function output($return = false){
 		global $user;
+		global $config;
+
+		$ts = htmlspecialchars($config->timestamp);
 
 		// Doctype
 		$html  = "<!doctype html>\n";
@@ -75,12 +78,12 @@ class Header{
 
 		// Stylesheet import
 		foreach ($this->stylesheets as $style){
-			$html .= "\t\t<link rel=stylesheet type=\"text/css\" href=\"$style\" />\n";
+			$html .= "\t\t<link rel=stylesheet type=\"text/css\" href=\"$style?t=$ts\" />\n";
 		}
 
 		// Script import
 		foreach ($this->scripts as $script){
-			$html .= "\t\t<script type=\"text/javascript\" src=\"$script\"></script>\n";
+			$html .= "\t\t<script type=\"text/javascript\" src=\"$script?t=$ts\"></script>\n";
 		}
 
 		// Start Body of the page
