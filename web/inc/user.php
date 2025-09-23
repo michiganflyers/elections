@@ -1,7 +1,7 @@
 <?php
 require_once('db.php');
 
-class User{
+class User {
 	private $username = "";
 	private $email = "";
 	private $name = "";
@@ -12,8 +12,28 @@ class User{
 	private $role = 0;
 
 	function __construct(){
-		if(isset($_SESSION['token']) && strlen($_SESSION['token']) > 41) {
-			$this->parseToken($_SESSION['token']);
+		global $db;
+
+		if (!empty($db) && !empty($_COOKIE['token']) && strlen($_COOKIE['token']) == 40) {
+			$this->loadSession($_COOKIE['token']);
+		}
+	}
+
+	private function loadSession($session) {
+		global $db;
+
+		$expiration = gmdate('Y-m-d H:i:s', time() - 3600);
+		$db->query("DELETE FROM sessions WHERE ctime < '$expiration'");
+		$result = $db->fetchRow("SELECT data, member_id, name, username, voting_id, email, permission_level, checkedin, proxy_id FROM sessions LEFT JOIN members ON (sessions.member_id = members.skymanager_id) WHERE sessions.session_token='{$db->sanitize($session)}' AND ctime > '$expiration'");
+
+		if ($result) {
+			$this->username = $result['username'];
+			$this->name = $result['name'];
+			$this->uid = $result['member_id'];
+			$this->voterId = $result['voting_id'];
+			$this->proxyId = $result['proxy_id'];
+			$this->role = min(2, max(0, (int) $result['permission_level']));
+			$this->loggedin = true;
 		}
 	}
 
@@ -29,8 +49,7 @@ class User{
 				"email" => "$username@example.net"
 			];
 
-			$_SESSION['token'] = '.' . base64_encode(json_encode($data)) . '.';
-			return $this->parseToken($_SESSION['token']);
+			return $this->parseToken('.' . base64_encode(json_encode($data)) . '.');
 		}
 		// end testing code
 
@@ -53,8 +72,7 @@ class User{
 		$token = file_get_contents('https://beta.schedule.michiganflyers.club/api/oauth/token', false, $ctx);
 
 		if (!empty($token)) {
-			$_SESSION['token'] = json_decode($token)->access_token;
-			return $this->parseToken($_SESSION['token']);
+			return $this->parseToken(json_decode($token)->access_token);
 		}
 
 		return false;
@@ -75,29 +93,30 @@ class User{
 		$this->email    = $obj->email ?? null;
 		$this->loggedin = true;
 
+		$session_id = $db->randomKey();
+		$cookie_opts = ['expires' => time() + 3600, 'httponly' => true, 'samesite' => 'Strict'];
+		setcookie('token', $session_id, $cookie_opts);
+
 		// Create user automatically on login
 		$_ = $db->insert('members', ['skymanager_id', 'name', 'username', 'email'], [[((int) $this->uid), $this->name, $this->username, (empty($this->email) ? 'NULL' : $this->email)]], true);
 
-		// Get voter ID
-		//$result = $db->fetchRow('select members.voting_id from members left join proxy on (members.voting_id=proxy.voting_id) where proxy.delegate_id is null and skymanager_id=' . ((int) $this->uid));
-		$result = $db->fetchRow('select voting_id, proxy_id from members where skymanager_id=' . ((int) $this->uid));
+		// Assign session token
+		$_ = $db->insert('sessions', ['member_id', 'session_token', 'data'], [[(int) $this->uid, $session_id, $token]]);
 
-		$admincheck = $db->fetchRow('select members.permission_level from members where skymanager_id=' . ((int) $this->uid));
+		// Get voter ID
+		$result = $db->fetchRow('select voting_id, proxy_id, permission_level from members where skymanager_id=' . ((int) $this->uid));
 		if ($result) {
 			$this->voterId = $result['voting_id'];
 			$this->proxyId = $result['proxy_id'];
+			$this->role = min(2, max(0, (int) $result['permission_level']));
 			// Auto check in
 			// TODO: Only auto check-in after meeting is started (disabled for now)
 			//$_ = $db->query('update members set checkedin=TRUE where voting_id is not null and skymanager_id=' . ((int) $this->uid));
 		} else {
 			$this->voterId = null;
 			$this->proxyId = null;
-		}
-
-		if ($admincheck)
-			$this->role = min(2, max(0, (int) $admincheck['permission_level']));
-		else
 			$this->role = 0;
+		}
 
 		return true;
 	}
@@ -140,7 +159,11 @@ class User{
 	}
 
 	public function logout(){
-		$_SESSION['token'] = "";
+		global $db;
+
+		if (!empty($_COOKIE['token']))
+			$db->query("DELETE FROM sessions WHERE session_token='{$db->sanitize($_COOKIE['token'])}'");
+
 		$this->username = "";
 		$this->uid = -1;
 		$this->loggedin = false;

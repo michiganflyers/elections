@@ -31,6 +31,9 @@ class MysqlDb {
 		if (!mysqli_options($handler->mysql, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, true))
 			return false;
 
+		if (!mysqli_options($handler->mysql, MYSQLI_INIT_COMMAND, "SET time_zone = '+00:00'"))
+			return false;
+
 		if (!mysqli_real_connect($handler->mysql, $hostname, $username, $password))
 			return false;
 

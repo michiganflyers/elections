@@ -9,9 +9,6 @@ if (empty($config)) {
 	die();
 }
 
-// Start the session
-session_start();
-
 // Database and Authentication
 require_once(BASE . '/inc/db.php');
 
