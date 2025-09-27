@@ -201,7 +201,11 @@ CREATE TABLE IF NOT EXISTS runtimeconfig (
 	if (!$success)
 		return "Failed to set up database schema: " . $db->getError();
 
-	$success = $db->insert('runtimeconfig', ['parameter', 'value'], [['testAccounts', 'false']], true);
+	$default_configs = [
+		['testAccounts', 'false'],
+		['autoCheckIn', 'false']
+	];
+	$success = $db->insert('runtimeconfig', ['parameter', 'value'], $default_configs, true);
 	if (!$success)
 		return "Failed to insert initial data: " . $db->getError();
 

@@ -81,6 +81,8 @@ class User {
 	private function parseToken($token) {
 		global $db;
 
+		$rtConfig = db_get_runtime_config();
+
 		$data = explode('.', $token);
 		if (count($data) != 3)
 			return false;
@@ -110,8 +112,9 @@ class User {
 			$this->proxyId = $result['proxy_id'];
 			$this->role = min(2, max(0, (int) $result['permission_level']));
 			// Auto check in
-			// TODO: Only auto check-in after meeting is started (disabled for now)
-			//$_ = $db->query('update members set checkedin=TRUE where voting_id is not null and skymanager_id=' . ((int) $this->uid));
+			if ($rtConfig['autoCheckIn'] === 'true') {
+				$_ = $db->query('update members set checkedin=TRUE where voting_id is not null and skymanager_id=' . ((int) $this->uid));
+			}
 		} else {
 			$this->voterId = null;
 			$this->proxyId = null;

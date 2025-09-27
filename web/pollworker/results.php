@@ -26,7 +26,7 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as proxy from members where checkedin=true UNION select voter.name, voter.username, voter.voting_id, members.voting_id as proxy from members inner join proxy on (proxy.delegate_id=members.voting_id) left join members as voter on (voter.voting_id=proxy.voting_id) where members.checkedin = true');
+$checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as proxy from members where checkedin=true and voting_id is not null UNION select voter.name, voter.username, voter.voting_id, members.voting_id as proxy from members left join members as voter on (voter.proxy_id=members.skymanager_id) where members.checkedin = true and members.voting_id is not null and voter.voting_id is not null');
 $members = $db->fetchRow('select count(*) as count from members where voting_id is not null');
 $count = $members['count'];
 
@@ -65,7 +65,7 @@ unset($position);
 <span class=count><?= $count ?></span>
 </div>
 <div class=form-row>
-<span class=label>Checked In or Absentee</span>
+<span class=label>Present or via Proxy</span>
 <span class=count><?= count($checkedin) ?></span>
 </div>
 <div class=form-row>
