@@ -220,7 +220,7 @@ var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
 			<select name=newState onchange="this.form.submit()">
 				<option value=closed     <?= $position['state'] === 'closed' ? 'selected' : '' ?>>Closed</option>
 				<option value=nominating <?= $position['state'] === 'nominating' ? 'selected' : '' ?>>Nominating</option>
-				<option value=early      <?= $position['state'] === 'early' ? 'selected' : '' ?>>Early Voting</option>
+				<option value=early      <?= $position['state'] === 'early' ? 'selected' : '' ?>>Proxying</option>
 				<option value=voting     <?= $position['state'] === 'voting' ? 'selected' : '' ?>>Voting</option>
 			</select>
 			<button class="submit danger delete" type=submit name=remove value=remove>X</button>

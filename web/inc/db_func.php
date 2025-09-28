@@ -45,7 +45,7 @@ function db_get_positions() {
 	$states = [
 		'Inactive/Closed',
 		'Nominating',
-		'Early Voting',
+		'Proxying',
 		'Active Voting'
 	];
 
