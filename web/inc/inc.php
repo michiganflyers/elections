@@ -3,7 +3,9 @@
 define('BASE', dirname(__DIR__));
 define('BASEURL', $_SERVER['SERVER_NAME']);
 
-$config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"));
+require_once(BASE . '/inc/autoconfig.php');
+
+$config = do_autoconfigure();
 if (empty($config)) {
 	header('Location: /configure.php');
 	die();
@@ -12,12 +14,12 @@ if (empty($config)) {
 // Database and Authentication
 require_once(BASE . '/inc/db.php');
 
-switch ($config->type) {
+switch ($config['type']) {
 	case "mysql":
-		$db = MysqlDb::Connect($config->host, $config->user, $config->pass, $config->db);
+		$db = MysqlDb::Connect($config['host'], $config['user'], $config['pass'], $config['db']);
 		break;
 	case "pgsql":
-		$db = PgsqlDb::Connect($config->connString);
+		$db = PgsqlDb::Connect($config['connString']);
 		break;
 	case "sqlite":
 	default:

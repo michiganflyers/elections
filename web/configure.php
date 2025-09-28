@@ -2,60 +2,18 @@
 define('BASE', __DIR__);
 define('BASEURL', $_SERVER['SERVER_NAME']);
 
-$default_pg_connString = getenv('ELECTIONDB_URL');
-$default_mysql_db = getenv('ELECTIONDB_MYSQL');
+require_once(BASE . '/inc/autoconfig.php');
 
-$timestamp = (int) @file_get_contents(BASE . "/inc/config/timestamp.txt");
-
-$config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"));
-if (!empty($config)) {
+if (do_autoconfigure()) {
 	header('Location: /index.php');
 	die();
 }
 
-require_once(BASE . '/inc/db.php');
 require_once(BASE . '/inc/db_func.php');
 require_once(BASE . '/inc/user.php');
 
-// If there's a default connection string and a database already exists (with data)
-// Set configuration to that database and send back to homepage.
-// This can happen if we're operating in a hosted environment and a container restarts or spins up
-if (!empty($default_pg_connString)) {
-	$db = PgsqlDb::Connect($default_pg_connString);
-	if ($db && !empty($db->fetchRow("select skymanager_id from members limit 1"))) {
-		$conf = json_encode([
-			'type' => 'pgsql',
-			'connString' => $default_pg_connString,
-			'timestamp' => $timestamp
-		], JSON_PRETTY_PRINT);
-
-		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
-			header('Location: /index.php');
-			die();
-		}
-	}
-}
-
-if (!empty($default_mysql_db)) {
-	$props = json_decode($default_mysql_db);
-	$db = MysqlDb::Connect($props->hostname, $props->username, $props->password, $props->database);
-	if ($db && !empty($db->fetchRow("select skymanager_id from members limit 1"))) {
-		$conf = json_encode([
-			'type' => 'mysql',
-			'host' => $props->hostname,
-			'user' => $props->username,
-			'pass' => $props->password,
-			'db'   => $props->database,
-			'timestamp' => $timestamp
-		], JSON_PRETTY_PRINT);
-
-		if (file_put_contents(BASE . "/inc/config/config.json", $conf) !== false) {
-			header('Location: /index.php');
-			die();
-		}
-	}
-}
-
+$default_pg_connString = getenv('ELECTIONDB_URL');
+$default_mysql_db = getenv('ELECTIONDB_MYSQL');
 $fieldNames = ['db-type', 'db-host', 'db-username', 'db-password', 'db-database', 'flyers-user', 'flyers-password'];
 
 function test_config($params) {

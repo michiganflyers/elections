@@ -63,7 +63,7 @@ class Header{
 		global $user;
 		global $config;
 
-		$ts = htmlspecialchars($config->timestamp);
+		$ts = htmlspecialchars($config['timestamp']);
 
 		// Doctype
 		$html  = "<!doctype html>\n";
