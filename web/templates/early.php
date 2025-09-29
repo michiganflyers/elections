@@ -12,6 +12,10 @@ get_gravatar_assoc($proxylist);
 // Shuffle candidates using userid as seed
 mt_srand($user->getUserId());
 shuffle($candidates);
+
+$rtConfig = db_get_runtime_config();
+$defaultProxyId = (int) $rtConfig['defaultProxyId'];
+$default_proxy = $db->fetchRow("select name from members where skymanager_id=$defaultProxyId");
 ?>
 <script type="text/javascript">
 var search_list = <?= json_encode($proxylist, JSON_HEX_TAG); ?>;
@@ -38,8 +42,8 @@ var votes = <?= json_encode($earlyvotes, JSON_HEX_TAG); ?>;
 </div>
 <div class="form-section proxy-election">
 	<h3>Proxy Election</h3>
-	<input type=radio name=proxy-election id=proxy-default value=default <?= $user->proxyId() == 0 ? 'checked' : ''; ?> />
-	<input type=radio name=proxy-election id=proxy-named value=named <?= $user->proxyId() == 0 ? '' : 'checked'; ?> />
+	<input type=radio name=proxy-election id=proxy-default value=default <?= $user->proxyId() == $defaultProxyId ? 'checked' : ''; ?> />
+	<input type=radio name=proxy-election id=proxy-named value=named <?= $user->proxyId() == $defaultProxyId ? '' : 'checked'; ?> />
 	<div class="form-row">
 		<div class="selector">
 			<label class=radio for=proxy-default>
@@ -51,7 +55,7 @@ var votes = <?= json_encode($earlyvotes, JSON_HEX_TAG); ?>;
 		</div>
 	</div>
 	<div class="form-row conditional proxy-default">
-		Default Proxy Selection: Austin Cirulli (Vice President &amp; Election Committe Member)
+		Default Proxy Selection<?= !empty($default_proxy) ? ': ' . $default_proxy['name'] : ''; ?>
 	</div>
 	<div class="form-row conditional proxy-named">
 		<input type="text" placeholder="Proxy Search" id="searchbox" name="searchbox" value="" />

@@ -6,6 +6,8 @@ if (!$user->loggedin()) {
 	die();
 }
 
+$rtConfig = db_get_runtime_config();
+
 $result = null;
 if (!empty($_POST['ballot']) && !empty($_POST['action']) && !empty($_POST['proxy-signature'])) {
 	$ranks = [];
@@ -22,7 +24,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['action']) && !empty($_POST['proxy
 	}
 
 	// Update proxy selection
-	$proxy_member_id = 0;
+	$proxy_member_id = (int) $rtConfig['defaultProxyId'];
 	if (!empty($_POST['proxy-member-id']) && $_POST['proxy-election'] !== 'default')
 		$proxy_member_id = (int) $_POST['proxy-member-id'];
 
@@ -43,7 +45,7 @@ if (!empty($_POST['ballot']) && !empty($_POST['action']) && !empty($_POST['proxy
 	}
 
 	if ($result && $_POST['action'] !== 'withdraw') {
-		$result = $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
+		$result = empty($ranks) || $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
 		if ($result)
 			$error = 'Proxy card successfully submitted';
 		else

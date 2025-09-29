@@ -161,7 +161,8 @@ CREATE TABLE IF NOT EXISTS runtimeconfig (
 
 	$default_configs = [
 		['testAccounts', 'false'],
-		['autoCheckIn', 'false']
+		['autoCheckIn', 'false'],
+		['defaultProxyId', '-1']
 	];
 	$success = $db->insert('runtimeconfig', ['parameter', 'value'], $default_configs, true);
 	if (!$success)
