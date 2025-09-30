@@ -31,23 +31,23 @@ $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Poll Worker Tools');
 $header->output();
 
-$voters = $db->fetchAssoc('
+$voters = $db->fetchAssoc("
 select
-	MIN(skymanager_id) as skymanager_id,
-	MIN(members.voting_id) as voting_id,
-	MIN(name) as name,
-	MIN(username) as username,
-	group_concat(proxy.voting_id) as proxies,
-	MIN(upstream_proxy.delegate_id) as delegate,
-	coalesce(MIN(email), \'\') as gravatar_email
+	members.skymanager_id,
+	members.voting_id,
+	members.name,
+	members.username,
+	group_concat(proxies.voting_id) as proxies,
+	members.proxy_id as delegate,
+	coalesce(members.email, '') as gravatar_email
 from members
-	left join proxy on (members.voting_id=proxy.delegate_id)
-	left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id)
+	left join members as proxies on (proxies.proxy_id=members.skymanager_id)
 where members.voting_id is not null
 group by members.voting_id
 UNION
-select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, \'\') as gravatar_email
-from members where members.voting_id is null');
+select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, '') as gravatar_email
+from members where voting_id is null
+");
 
 get_gravatar_assoc($voters);
 ?>

@@ -30,12 +30,26 @@ $checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as proxy fr
 $members = $db->fetchRow('select count(*) as count from members where voting_id is not null');
 $count = $members['count'];
 
-$results = $db->fetchAssoc('select votes.position, members.name, count(*) as votes from votes left join members on (votes.candidate_id=members.skymanager_id) group by candidate_id, position, members.name');
-$positions = db_get_positions();
+$results = $db->fetchAssoc('select votes.position, votes.candidate_id, members.name, count(*) as votes from votes left join members on (votes.candidate_id=members.skymanager_id) group by candidate_id, position, members.name');
+$positions = [];
 $candidates = db_get_candidates();
 
+foreach (db_get_positions() as $position) {
+	$positions[$position['code']] = $position;
+	$positions[$position['code']]['candidates'] = [];
+
+	$position_candidates = array_filter($candidates, fn($candidate) => $candidate['position'] === $position['code']);
+	foreach ($position_candidates as $candidate) {
+		$positions[$position['code']]['candidates'][$candidate['skymanager_id']] = $candidate;
+	}
+}
+
+foreach ($results as $result) {
+	$positions[$result['position']]['candidates'][$result['candidate_id']]['votes'] = $result['votes'];
+}
+
 foreach ($positions as &$position) {
-	$position['candidates'] = array_filter($candidates, fn($candidate) => $candidate['position'] === $position['code']);
+	uasort($position['candidates'], fn($a, $b) => ($b['votes'] ?? 0) - ($a['votes'] ?? 0));
 }
 unset($position);
 ?>
@@ -101,7 +115,7 @@ unset($position);
 	<?php foreach ($position['candidates'] as $candidate): ?>
 	<div class="candidate-result form-row">
 		<span class=name><?= htmlspecialchars($candidate['name']); ?></span>
-		<span class=votes></span>
+		<span class=votes><?= $candidate['votes'] ?? '0'; ?></span>
 	</div>
 	<?php endforeach; ?>
 	<?php if (empty($position['candidates'])): ?>
