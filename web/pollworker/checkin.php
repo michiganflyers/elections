@@ -43,8 +43,8 @@ select
 from members
 	left join members as proxies on (proxies.proxy_id=members.skymanager_id)
 where members.voting_id is not null
-group by members.voting_id
-UNION
+group by members.voting_id, members.skymanager_id, members.name, members.username, members.proxy_id, members.email
+UNION ALL
 select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, '') as gravatar_email
 from members where voting_id is null
 ");
