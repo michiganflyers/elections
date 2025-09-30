@@ -188,7 +188,6 @@ $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
 $header->addStyle("/styles/vote.css");
 $header->addScript("/js/jquery-1.11.3.min.js");
-$header->addScript("/js/search.js");
 $header->addScript("/js/admin-search.js");
 $header->setAttribute('title', 'Michigan Flyers');
 $header->setAttribute('tagline', 'Election Administration Tools');

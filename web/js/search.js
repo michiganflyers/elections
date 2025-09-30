@@ -121,7 +121,7 @@ $(function(){
 	//$('#searchbox').bind('change keypress keydown keyup', function() { search(this.value); });
 	$('#searchbox').bind('textInput input', function() { search(this.value, this.form.ballot?.value ?? undefined); });
 
-	var initialProfile = +document.getElementById('candidate-input').value;
+	var initialProfile = +(document.getElementById('candidate-input')?.value);
 	if (initialProfile != 0)
 		defaultLoad(initialProfile);
 });
