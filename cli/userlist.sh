@@ -38,4 +38,4 @@ if ! $reprocess; then
 fi
 
 echo -n "Eligible voters: "
-jq -c '. | select(.balance >= 0) | select(.tags | contains(["Flying"]) or contains(["Honorary Dues"]) or contains(["CFI/Mechanic"]) or contains(["CFI/MECH/DIRECTORS Dues"]))' results.json | tee voters.json | wc -l
+jq -c '. | select(.balance >= 0) | select(.tags | (contains(["Flying"]) or (contains(["Honorary Dues"]) and contains(["Flying"])) or contains(["CFI/Mechanic"]) or contains(["CFI/MECH/DIRECTORS Dues"])) and (contains(["Family Disc Dues"]) | not))' results.json | tee voters.json | wc -l
