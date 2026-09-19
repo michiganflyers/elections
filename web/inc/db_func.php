@@ -9,6 +9,31 @@ function db_get_proxylist() {
 	return $db->fetchAssoc("select skymanager_id, name, username, coalesce(email, '') as gravatar_email from members");
 }
 
+function db_get_voters() {
+	global $db;
+
+	$voters = $db->fetchAssoc('
+	select
+		MIN(skymanager_id) as skymanager_id,
+		MIN(members.voting_id) as voting_id,
+		MIN(name) as name,
+		MIN(username) as username,
+		group_concat(proxy.voting_id) as proxies,
+		MIN(upstream_proxy.delegate_id) as delegate,
+		coalesce(MIN(email), \'\') as gravatar_email
+	from members
+		left join proxy on (members.voting_id=proxy.delegate_id)
+		left join proxy as upstream_proxy on (upstream_proxy.voting_id=members.voting_id)
+	where members.voting_id is not null
+	group by members.voting_id
+	UNION
+	select skymanager_id, voting_id, name, username, NULL as proxies, NULL as delegate, coalesce(email, \'\') as gravatar_email
+	from members where members.voting_id is null');
+
+	get_gravatar_assoc($voters);
+	return $voters;
+}
+
 function db_get_current_user_votes() {
 	global $db;
 	global $user;

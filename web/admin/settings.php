@@ -12,22 +12,22 @@ if ($user->getRole() < 2) {
 }
 
 $result = null;
-// Create Position
-if (!empty($_POST['create'])) {
-	$code = $_POST['add-position'];
-	$desc = $_POST['add-description'];
+if (!empty($_POST['config'])) {
+	$rcKey = $_POST['rcconfig-key'];
+	$rcValue = $_POST['rcconfig-value'];
 
-	if (empty($code) || empty($desc)) $error = "Both code and description are required";
-
-	if (empty($error)) {
-		$result = $db->insert('positions', ['position', 'description'], [[$code, $desc]]);
-		if ($result === false)
-			$error = "That position already exists.";
+	if (empty($rcKey)) {
+		$error = "Cannot update a blank configuration key";
+	} else {
+		$result = $db->query("UPDATE runtimeconfig SET value='{$db->sanitize($rcValue)}' WHERE parameter='{$db->sanitize($rcKey)}'");
+		if (!$result)
+			$error = "Failed to update config for key '" . htmlspecialchars($rcKey) . "'";
 		else
-			$error = "Created position " . htmlspecialchars($desc);
+			$error = "Successfully updated config for key '" . htmlspecialchars($rcKey) . "'";
 	}
 }
 
+$rtconfig = db_get_runtime_config();
 $header = new Header("Michigan Flyers Election : Admin");
 $header->addStyle("/styles/style.css");
 $header->addStyle("/styles/admin.css");
@@ -40,7 +40,7 @@ $header->output();
 <div class="form-row">
 	<div class="selector">
 		<label class="radio">
-			<input type="radio" name="admin-page" value="setup" checked />
+			<input type="radio" name="admin-page" value="setup" />
 			<a class="radio-button-label" href="/admin/admin.php">Setup</a>
 		</label>
 		<label class="radio">
@@ -48,7 +48,7 @@ $header->output();
 			<a class="radio-button-label" href="/admin/management.php">Management</a>
 		</label>
 		<label class="radio">
-			<input type="radio" name="admin-page" value="settings" />
+			<input type="radio" name="admin-page" value="settings" checked />
 			<a class="radio-button-label" href="/admin/settings.php">Settings</a>
 		</label>
 	</div>
@@ -63,22 +63,19 @@ $header->output();
 	</div>
 </div>
 <?php endif; ?>
-<form action="admin.php" method="POST">
 <div class="form-section">
-	<h3>Add Position</h3>
-	<div class="form-row">
-		<label for="add-position">Add Position Code</label>
-		<input type="text" placeholder="PRES" id="add-position" name="add-position" value="" />
+	<h3>Runtime Configuration</h3>
+<?php foreach ($rtconfig as $key => $value): ?>
+	<div class="form-row runtime-config">
+		<form action="settings.php" method="POST">
+			<input type=hidden name="rcconfig-key" value="<?= htmlspecialchars($key) ?>" />
+			<label for="config-<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($key) ?></label>
+			<input type=text id="config-<?= htmlspecialchars($key) ?>" name="rcconfig-value" value="<?= htmlspecialchars($value) ?>" />
+			<input class="submit" type="submit" name="config" value="Save" />
+		</form>
 	</div>
-	<div class="form-row">
-		<label for="add-description">Add Position Description</label>
-		<input type="text" placeholder="President" id="add-description" name="add-description" value="" />
-	</div>
-	<div class="form-row">
-		<input class="submit" type="submit" name="create" value="Create Position" />
-	</div>
+<?php endforeach; ?>
 </div>
-</form>
 <?php
 $footer = new Footer();
 $footer->output();
