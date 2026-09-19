@@ -1,11 +1,15 @@
 <?php
 require_once(BASE . '/inc/db.php');
 
+function get_build_timestamp() {
+	return (int) @file_get_contents(BASE . "/inc/config/timestamp.txt");
+}
+
 function do_autoconfigure() {
 	$default_pg_connString = getenv('ELECTIONDB_URL');
 	$default_mysql_db = getenv('ELECTIONDB_MYSQL');
 
-	$timestamp = (int) @file_get_contents(BASE . "/inc/config/timestamp.txt");
+	$timestamp = get_build_timestamp();
 
 	$config = @json_decode(file_get_contents(BASE . "/inc/config/config.json"), true);
 	if (!empty($config)) {

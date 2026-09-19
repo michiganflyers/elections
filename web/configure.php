@@ -34,6 +34,7 @@ function test_config($params) {
 		$params['db-database'] = $props->database;
 	}
 
+	$timestamp = get_build_timestamp();
 	$config = [
 		"type" => $params['db-type'],
 		'timestamp' => $timestamp
