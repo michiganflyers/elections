@@ -118,6 +118,10 @@ class MysqlDb {
 		return mysqli_error($this->mysql);
 	}
 
+	public function getAffectedRows() {
+		return mysqli_affected_rows($this->mysql);
+	}
+
 	//public function lastInsertId() {
 	//	return mysqli_insert_id($this->mysql);
 	//}
@@ -146,6 +150,7 @@ class MysqlDb {
 
 class PgsqlDb {
 	private $pgsql;
+	private $lastResult;
 
 	private function __construct() {}
 
@@ -164,7 +169,8 @@ class PgsqlDb {
 
 	public function query($query) {
 		try {
-			return pg_query($this->pgsql, $query);
+			$this->lastResult = pg_query($this->pgsql, $query);
+			return $this->lastResult;
 		} catch (Throwable $err) {
 			return false;
 		}
@@ -259,6 +265,10 @@ class PgsqlDb {
 
 	public function getError() {
 		return pg_last_error($this->pgsql);
+	}
+
+	public function getAffectedRows() {
+		return $this->lastResult ? pg_affected_rows($this->lastResult) : 0;
 	}
 
 	//public function lastInsertId() {
@@ -395,6 +405,10 @@ class SqliteDb {
 
 	public function getError() {
 		return $this->sqlite->lastErrorCode() === 0 ? "" : $this->sqlite->lastErrorMsg();
+	}
+
+	public function getAffectedRows() {
+		return $this->sqlite->changes();
 	}
 
 	//public function lastInsertId() {

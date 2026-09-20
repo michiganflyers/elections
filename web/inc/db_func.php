@@ -34,6 +34,14 @@ function db_get_voters() {
 	return $voters;
 }
 
+function db_get_users() {
+	global $db;
+
+	$users = $db->fetchAssoc("select skymanager_id, name, username, voting_id, proxy_id, permission_level, coalesce(email, '') as gravatar_email from members order by name");
+	get_gravatar_assoc($users);
+	return $users;
+}
+
 function db_get_current_user_votes() {
 	global $db;
 	global $user;
