@@ -8,8 +8,8 @@ select {
 
 .admin-position-management form {
 	display: grid;
-	grid-template-areas: "code select delete" "name select delete";
-	grid-template-columns: 1fr min-content min-content;
+	grid-template-areas: "code select edit delete" "name select edit delete";
+	grid-template-columns: 1fr min-content min-content min-content;
 	column-gap: 0.5rem;
 }
 
@@ -27,6 +27,10 @@ select {
 	grid-area: select;
 }
 
+.admin-position-management form .edit {
+	grid-area: edit;
+}
+
 .admin-position-management form .delete, .admin-position-management form .purge {
 	grid-area: delete;
 }
@@ -35,11 +39,46 @@ select {
 	padding: 0px 0.5rem;
 }
 
+.admin-position-management form .edit {
+	display: flex;
+	align-items: center;
+	padding: 0px 10px;
+	background: linear-gradient(#eee,#e7e7e7);
+	border: 1px solid rgba(0,0,0,.2);
+	border-radius: 3px;
+	color: #000;
+	text-decoration: none;
+}
+
 .runtime-config form {
 	display: grid;
 	grid-template-columns: 1fr 3fr min-content;
 	column-gap: 0.5rem;
 	align-items: center;
+}
+
+.admin-candidate-management form {
+	display: grid;
+	grid-template-areas: "name select delete";
+	grid-template-columns: 1fr min-content min-content;
+	column-gap: 0.5rem;
+	align-items: center;
+}
+
+.admin-candidate-management form .candidate-name {
+	grid-area: name;
+}
+
+.admin-candidate-management form .restore {
+	grid-area: select;
+}
+
+.admin-candidate-management form .delete, .admin-candidate-management form .purge {
+	grid-area: delete;
+}
+
+.admin-candidate-management form .delete {
+	padding: 0px 0.5rem;
 }
 
 /* Results Page */

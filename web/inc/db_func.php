@@ -1,7 +1,17 @@
 <?php
 function db_get_candidates() {
 	global $db;
-	return $db->fetchAssoc("select candidates.skymanager_id, position, statement, name, username, coalesce(email, '') as gravatar_email from candidates INNER JOIN members on (candidates.skymanager_id=members.skymanager_id)");
+	return $db->fetchAssoc("select candidates.skymanager_id, position, statement, name, username, coalesce(email, '') as gravatar_email from candidates INNER JOIN members on (candidates.skymanager_id=members.skymanager_id) where candidates.rtime is null");
+}
+
+function db_get_position($code) {
+	global $db;
+	return $db->fetchRow("select position as code, description as label, state, rtime from positions where position='{$db->sanitize($code)}'");
+}
+
+function db_get_position_candidates($position) {
+	global $db;
+	return $db->fetchAssoc("select candidates.skymanager_id, candidates.position, candidates.statement, members.name, members.username, coalesce(members.email, '') as gravatar_email, candidates.rtime is null as eligible from candidates INNER JOIN members on (candidates.skymanager_id=members.skymanager_id) where candidates.position='{$db->sanitize($position)}' order by members.name");
 }
 
 function db_get_proxylist() {

@@ -185,6 +185,7 @@ var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
 				<option value=early      <?= $position['state'] === 'early' ? 'selected' : '' ?>>Proxying</option>
 				<option value=voting     <?= $position['state'] === 'voting' ? 'selected' : '' ?>>Voting</option>
 			</select>
+			<a class="edit" href="manageposition.php?position=<?= urlencode($code) ?>">Edit</a>
 			<button class="submit danger delete" type=submit name=remove value=remove>X</button>
 		</form>
 	</div>

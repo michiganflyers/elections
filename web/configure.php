@@ -145,6 +145,8 @@ CREATE TABLE IF NOT EXISTS candidates (
 	skymanager_id INTEGER NOT NULL,
 	position VARCHAR(64) NOT NULL,
 	statement TEXT NOT NULL,
+	ctime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	rtime TIMESTAMP DEFAULT NULL,
 
 	PRIMARY KEY (skymanager_id, position),
 	FOREIGN KEY (skymanager_id) REFERENCES members (skymanager_id) ON DELETE CASCADE,
@@ -154,6 +156,11 @@ CREATE TABLE IF NOT EXISTS candidates (
 CREATE TABLE IF NOT EXISTS runtimeconfig (
 	parameter VARCHAR(64) NOT NULL PRIMARY KEY,
 	value TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS migrations (
+	migration_number INTEGER NOT NULL PRIMARY KEY,
+	applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 ");
 
@@ -168,6 +175,10 @@ CREATE TABLE IF NOT EXISTS runtimeconfig (
 	$success = $db->insert('runtimeconfig', ['parameter', 'value'], $default_configs, true);
 	if (!$success)
 		return "Failed to insert initial data: " . $db->getError();
+
+	$success = $db->insert('migrations', ['migration_number'], [[1]], true);
+	if (!$success)
+		return "Failed to insert initial migration: " . $db->getError();
 
 	session_start();
 	$success = $user->login($params['flyers-user'], $params['flyers-password']);

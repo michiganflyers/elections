@@ -30,7 +30,7 @@ $checkedin = $db->fetchAssoc('select name, username, voting_id, NULL as proxy fr
 $members = $db->fetchRow('select count(*) as count from members where voting_id is not null');
 $count = $members['count'];
 
-$results = $db->fetchAssoc('select votes.position, votes.candidate_id, members.name, count(*) as votes from votes left join members on (votes.candidate_id=members.skymanager_id) group by candidate_id, position, members.name');
+$results = $db->fetchAssoc('select votes.position, votes.candidate_id, members.name, count(*) as votes from votes left join members on (votes.candidate_id=members.skymanager_id) left join candidates on (candidates.skymanager_id=votes.candidate_id and candidates.position=votes.position) where candidates.rtime is null group by candidate_id, position, members.name');
 $positions = [];
 $candidates = db_get_candidates();
 
