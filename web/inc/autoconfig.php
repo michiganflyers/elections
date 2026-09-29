@@ -7,7 +7,8 @@ function get_build_timestamp() {
 
 function do_migrations($db) {
 	$migrations = [
-		1 => 'ALTER TABLE candidates ADD COLUMN ctime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ADD COLUMN rtime TIMESTAMP DEFAULT NULL'
+		1 => 'ALTER TABLE candidates ADD COLUMN ctime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ADD COLUMN rtime TIMESTAMP DEFAULT NULL',
+		2 => 'ALTER TABLE positions ADD COLUMN finalized TIMESTAMP DEFAULT NULL'
 	];
 
 	$migration = $db->fetchRow('select migration_number from migrations order by migration_number desc limit 1');

@@ -106,7 +106,8 @@ CREATE TABLE IF NOT EXISTS positions (
 	-- 2 Early Voting
 	-- 3 Active Voting
 	ctime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	rtime TIMESTAMP DEFAULT NULL
+	rtime TIMESTAMP DEFAULT NULL,
+	finalized TIMESTAMP DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS votes (
@@ -176,7 +177,7 @@ CREATE TABLE IF NOT EXISTS migrations (
 	if (!$success)
 		return "Failed to insert initial data: " . $db->getError();
 
-	$success = $db->insert('migrations', ['migration_number'], [[1]], true);
+	$success = $db->insert('migrations', ['migration_number'], [[2]], true);
 	if (!$success)
 		return "Failed to insert initial migration: " . $db->getError();
 

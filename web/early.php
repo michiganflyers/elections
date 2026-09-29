@@ -12,49 +12,54 @@ $result = null;
 if (!empty($_POST['ballot']) && !empty($_POST['action']) && !empty($_POST['proxy-signature'])) {
 	$ranks = [];
 	$position = $_POST['ballot'];
-	for ($i = 1; $i <= 5; $i++) {
-		if (!empty($_POST['rank-' . $i])) {
-			$ranks[] = [
-				(int) $_POST['rank-' . $i],
-				$position,
-				$user->getUserId(),
-				count($ranks) + 1,
-			];
+	$requested_position = db_get_position($position);
+	if (empty($requested_position) || (int) $requested_position['state'] !== 2 || !empty($requested_position['finalized'])) {
+		$error = 'Proxy cards can only be changed while the position is proxying.';
+	} else {
+		for ($i = 1; $i <= 5; $i++) {
+			if (!empty($_POST['rank-' . $i])) {
+				$ranks[] = [
+					(int) $_POST['rank-' . $i],
+					$position,
+					$user->getUserId(),
+					count($ranks) + 1,
+				];
+			}
 		}
-	}
 
-	// Update proxy selection
-	$proxy_member_id = (int) $rtConfig['defaultProxyId'];
-	if (!empty($_POST['proxy-member-id']) && $_POST['proxy-election'] !== 'default')
-		$proxy_member_id = (int) $_POST['proxy-member-id'];
+		// Update proxy selection
+		$proxy_member_id = (int) $rtConfig['defaultProxyId'];
+		if (!empty($_POST['proxy-member-id']) && $_POST['proxy-election'] !== 'default')
+			$proxy_member_id = (int) $_POST['proxy-member-id'];
 
-	$user_id = (int) $user->getUserId();
-	$result = $db->query("UPDATE members set proxy_id=$proxy_member_id where skymanager_id=$user_id");
-	if ($result)
-		$error = 'Set proxy information';
-	else
-		$error = 'Failed to set proxy member';
-
-	// First, delete prevotes where they exist for this position.
-	if ($result && $_POST['action'] === 'withdraw' || $_POST['action'] === 'update') {
-		$result = $db->query("DELETE FROM prevotes WHERE position='{$db->sanitize($position)}' AND member_id={$user->getUserId()}");
+		$user_id = (int) $user->getUserId();
+		$result = $db->query("UPDATE members set proxy_id=$proxy_member_id where skymanager_id=$user_id");
 		if ($result)
-			$error = 'Withdrew proxy card';
+			$error = 'Set proxy information';
 		else
-			$error = 'Failed to withdraw proxy card. Please retry or email the election committee at election2025@michiganflyers.club';
-	}
+			$error = 'Failed to set proxy member';
 
-	if ($result && $_POST['action'] !== 'withdraw') {
-		$result = empty($ranks) || $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
-		if ($result)
-			$error = 'Proxy card successfully submitted';
-		else
-			$error = 'Proxy card submission already exists';
-	}
+		// First, delete prevotes where they exist for this position.
+		if ($result && $_POST['action'] === 'withdraw' || $_POST['action'] === 'update') {
+			$result = $db->query("DELETE FROM prevotes WHERE position='{$db->sanitize($position)}' AND member_id={$user->getUserId()}");
+			if ($result)
+				$error = 'Withdrew proxy card';
+			else
+				$error = 'Failed to withdraw proxy card. Please retry or email the election committee at election2025@michiganflyers.club';
+		}
 
-	$positions = db_get_early_positions();
-	$candidates = db_get_candidates();
-	$requested = reset(array_filter($positions, fn($row) => $row['code'] === $_POST['ballot']));
+		if ($result && $_POST['action'] !== 'withdraw') {
+			$result = empty($ranks) || $db->insert('prevotes', ['candidate_id', 'position', 'member_id', 'priority'], $ranks);
+			if ($result)
+				$error = 'Proxy card successfully submitted';
+			else
+				$error = 'Proxy card submission already exists';
+		}
+
+		$positions = db_get_early_positions();
+		$candidates = db_get_candidates();
+		$requested = reset(array_filter($positions, fn($row) => $row['code'] === $_POST['ballot']));
+	}
 } else if (!empty($_POST['ballot']) && !empty($_POST['action']) && empty($_POST['proxy-signature'])) {
 	$error = 'You must sign the proxy card.';
 }

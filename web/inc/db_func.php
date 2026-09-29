@@ -6,7 +6,7 @@ function db_get_candidates() {
 
 function db_get_position($code) {
 	global $db;
-	return $db->fetchRow("select position as code, description as label, state, rtime from positions where position='{$db->sanitize($code)}'");
+	return $db->fetchRow("select position as code, description as label, state, rtime, finalized from positions where position='{$db->sanitize($code)}'");
 }
 
 function db_get_position_candidates($position) {
@@ -93,7 +93,7 @@ function db_get_positions() {
 	];
 
 	if (!$positions) {
-		$positions = $db->fetchAssoc("select position as code, description as label, state from positions where rtime is null order by ctime asc");
+		$positions = $db->fetchAssoc("select position as code, description as label, state, finalized from positions where rtime is null order by ctime asc");
 		foreach ($positions as &$position) {
 			$position['state_name'] = $states[$position['state']];
 		}

@@ -24,7 +24,7 @@ function loadPositions() {
 	$_pos = db_get_positions();
 	$positions = [];
 	foreach ($_pos as $position)
-		$positions[$position['code']] = [ "label" => $position['label'], "state" => $states[$position['state']]];
+		$positions[$position['code']] = [ "label" => $position['label'], "state" => $states[$position['state']], "finalized" => $position['finalized']];
 
 	return $positions;
 }
@@ -79,7 +79,7 @@ if (!empty($_POST['remove'])) {
 			$position_san = $db->sanitize($position);
 			// Active state is a bit different, since only one position can be in active state.
 			if ($newState === 'voting') {
-				$result = $db->query("UPDATE positions SET state=CASE WHEN position='$position_san' THEN 3 WHEN state=3 THEN 0 ELSE state END WHERE position='$position_san' OR state = 3;");
+				$result = $db->query("UPDATE positions SET state=CASE WHEN position='$position_san' THEN 3 WHEN state=3 THEN 0 ELSE state END WHERE (position='$position_san' OR state=3) AND finalized IS NULL;");
 
 				if ($result === false)
 					$error = "Failed to set active position";
@@ -87,7 +87,7 @@ if (!empty($_POST['remove'])) {
 					$error = "Set " . htmlspecialchars($position) . " as voting.";
 			} else {
 				$index = array_search($newState, $states, true);
-				$result = $db->query("UPDATE positions set state=$index where position='$position_san'");
+				$result = $db->query("UPDATE positions set state=$index where position='$position_san' AND finalized IS NULL");
 				if ($result === false)
 					$error = "Failed to set position '" . htmlspecialchars($position) . "' to '" . ucfirst($newState) . "'";
 				else
@@ -179,7 +179,7 @@ var voters = <?= json_encode($voters, JSON_HEX_TAG); ?>;
 			<span class="position-code"><?= $code ?></span>
 			<span class="position-name"><?= $position['label'] ?></span>
 
-			<select name=newState onchange="this.form.submit()">
+			<select name=newState <?= !empty($position['finalized']) ? 'disabled' : 'onchange="this.form.submit()"' ?>>
 				<option value=closed     <?= $position['state'] === 'closed' ? 'selected' : '' ?>>Closed</option>
 				<option value=nominating <?= $position['state'] === 'nominating' ? 'selected' : '' ?>>Nominating</option>
 				<option value=early      <?= $position['state'] === 'early' ? 'selected' : '' ?>>Proxying</option>

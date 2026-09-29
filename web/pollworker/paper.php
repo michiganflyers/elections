@@ -14,7 +14,8 @@ if ($user->getRole() < 1) {
 $_pos = db_get_positions();
 $positions = [];
 foreach ($_pos as $position)
-	$positions[$position['code']] = $position['label'];
+	if (empty($position['finalized']))
+		$positions[$position['code']] = $position['label'];
 
 $result = null;
 if (!empty($_POST['ballot']) && !empty($_POST['candidate'])) {

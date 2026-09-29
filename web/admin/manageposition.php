@@ -18,29 +18,57 @@ if (empty($position_code)) {
 }
 
 $result = null;
-if (!empty($_POST['rename'])) {
+if (!empty($_POST['finalize'])) {
+	$position_san = $db->sanitize($position_code);
+	$inserted = $db->query("
+		INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id)
+		SELECT prevotes.candidate_id, prevotes.position, members.voting_id, 'DIRECTED_PROXY', members.voting_id
+		FROM prevotes
+		INNER JOIN members ON (members.skymanager_id=prevotes.member_id AND members.voting_id IS NOT NULL)
+		INNER JOIN candidates ON (candidates.skymanager_id=prevotes.candidate_id AND candidates.position=prevotes.position AND candidates.rtime IS NULL)
+		INNER JOIN positions ON (positions.position=prevotes.position AND positions.rtime IS NULL AND positions.finalized IS NULL AND positions.state IN (0, 3))
+		LEFT JOIN votes AS existing_votes ON (existing_votes.position=prevotes.position AND existing_votes.member_id=members.voting_id)
+		WHERE prevotes.position='$position_san'
+		AND existing_votes.member_id IS NULL
+		AND NOT EXISTS (
+			SELECT 1
+			FROM prevotes AS better
+			INNER JOIN candidates AS better_candidate ON (better_candidate.skymanager_id=better.candidate_id AND better_candidate.position=better.position AND better_candidate.rtime IS NULL)
+			WHERE better.position=prevotes.position
+			AND better.member_id=prevotes.member_id
+			AND (better.priority < prevotes.priority OR (better.priority=prevotes.priority AND better.candidate_id < prevotes.candidate_id))
+		)");
+	$closed = $inserted ? $db->query("UPDATE positions SET state=0, finalized=CURRENT_TIMESTAMP WHERE position='$position_san' AND rtime IS NULL AND finalized IS NULL AND state IN (0, 3)") : false;
+	if (!$inserted || !$closed || $db->getAffectedRows() !== 1) {
+		$error = 'Position could not be finalized. Ensure it is not removed or already finalized, and is Closed or Voting.';
+	} else {
+		$result = true;
+		$error = 'Position finalized and directed proxy votes applied';
+	}
+} else if (!empty($_POST['rename'])) {
 	$description = $_POST['description'];
-	$result = $db->query("UPDATE positions SET description='{$db->sanitize($description)}' WHERE position='{$db->sanitize($position_code)}'");
+	$result = $db->query("UPDATE positions SET description='{$db->sanitize($description)}' WHERE position='{$db->sanitize($position_code)}' AND finalized IS NULL");
 	$error = $result ? "Position renamed" : "Failed to rename position";
 } else if (!empty($_POST['remove'])) {
 	$candidate_id = (int) $_POST['candidate-id'];
-	$result = $db->query("UPDATE candidates SET rtime=CURRENT_TIMESTAMP WHERE skymanager_id=$candidate_id AND position='{$db->sanitize($position_code)}'");
+	$result = $db->query("UPDATE candidates SET rtime=CURRENT_TIMESTAMP WHERE skymanager_id=$candidate_id AND position='{$db->sanitize($position_code)}' AND EXISTS (SELECT 1 FROM positions WHERE position='{$db->sanitize($position_code)}' AND finalized IS NULL)");
 	$error = $result ? "Candidate removed" : "Failed to remove candidate";
 } else if (!empty($_POST['restore'])) {
 	$candidate_id = (int) $_POST['candidate-id'];
-	$result = $db->query("UPDATE candidates SET rtime=NULL WHERE skymanager_id=$candidate_id AND position='{$db->sanitize($position_code)}'");
+	$result = $db->query("UPDATE candidates SET rtime=NULL WHERE skymanager_id=$candidate_id AND position='{$db->sanitize($position_code)}' AND EXISTS (SELECT 1 FROM positions WHERE position='{$db->sanitize($position_code)}' AND finalized IS NULL)");
 	$error = $result ? "Candidate restored" : "Failed to restore candidate";
 } else if (!empty($_POST['purge'])) {
 	$candidate_id = (int) $_POST['candidate-id'];
-	$result = $db->query("DELETE FROM candidates WHERE rtime IS NOT NULL AND skymanager_id=$candidate_id AND position='{$db->sanitize($position_code)}'");
+	$result = $db->query("DELETE FROM candidates WHERE rtime IS NOT NULL AND skymanager_id=$candidate_id AND position='{$db->sanitize($position_code)}' AND EXISTS (SELECT 1 FROM positions WHERE position='{$db->sanitize($position_code)}' AND finalized IS NULL)");
 	$error = $result ? "Candidate purged" : "Failed to purge candidate";
 } else if (!empty($_POST['add-candidate'])) {
 	$candidate_id = (int) $_POST['candidate-id'];
-	$result = $db->insert('candidates', ['skymanager_id', 'position', 'statement'], [[$candidate_id, $position_code, '']]);
+	$result = $db->query("INSERT INTO candidates (skymanager_id, position, statement) SELECT $candidate_id, '{$db->sanitize($position_code)}', '' WHERE EXISTS (SELECT 1 FROM positions WHERE position='{$db->sanitize($position_code)}' AND finalized IS NULL)");
 	$error = $result ? "Candidate added" : "Failed to add candidate";
 }
 
 $position = db_get_position($position_code);
+$is_finalized = !empty($position['finalized']);
 $candidates = db_get_position_candidates($position_code);
 $users = db_get_users();
 
@@ -82,6 +110,8 @@ $header->output();
 <?php endif; ?>
 <div class="form-section">
 	<h3><?= htmlspecialchars($position['label']) ?></h3>
+	<?php if ($is_finalized): ?><div class="form-row">Finalized at <?= htmlspecialchars($position['finalized']) ?></div><?php endif; ?>
+	<?php if (!$is_finalized): ?>
 	<form action="manageposition.php?position=<?= urlencode($position_code) ?>" method="POST">
 		<div class="form-row">
 			<label for="description">Position Name</label>
@@ -91,12 +121,25 @@ $header->output();
 			<input class="submit" type="submit" name="rename" value="Rename Position" />
 		</div>
 	</form>
+	<?php endif; ?>
 </div>
 <script type="text/javascript">
 var voters = <?= json_encode($users, JSON_HEX_TAG); ?>;
 </script>
+<?php if (!$is_finalized): ?>
+<div class="form-section">
+	<h3>Finalize Position</h3>
+	<div class="form-row">
+		<p>Finalizing closes this position, applies eligible directed proxy votes, and prevents further changes.</p>
+		<form action="manageposition.php?position=<?= urlencode($position_code) ?>" method="POST">
+			<button class="submit danger" type="submit" name="finalize" value="finalize" onclick="return confirm('Finalize this position and apply directed proxy votes? This cannot be undone.');">Finalize Position</button>
+		</form>
+	</div>
+</div>
+<?php endif; ?>
 <div class="form-section">
 	<h3>Manage Candidates</h3>
+<?php if ($is_finalized): ?><div class="form-row">This position is finalized; candidate controls are locked.</div><?php else: ?>
 <?php foreach ($candidates as $candidate): ?>
 	<div class="form-row admin-candidate-management">
 		<form action="manageposition.php?position=<?= urlencode($position_code) ?>" method="POST">
@@ -114,9 +157,11 @@ var voters = <?= json_encode($users, JSON_HEX_TAG); ?>;
 <?php if (empty($candidates)): ?>
 	<div class="form-row">No candidates</div>
 <?php endif; ?>
+<?php endif; ?>
 </div>
 <div class="form-section">
 	<h3>Add Candidate</h3>
+	<?php if (!$is_finalized): ?>
 	<form action="manageposition.php?position=<?= urlencode($position_code) ?>" method="POST">
 		<div class="form-row">
 			<input type="text" placeholder="Search for user" id="voter-searchbox" name="voter-searchbox" value="" />
@@ -131,6 +176,7 @@ var voters = <?= json_encode($users, JSON_HEX_TAG); ?>;
 			<input class="submit" type="submit" name="add-candidate" value="Add Candidate" />
 		</div>
 	</form>
+	<?php else: ?><div class="form-row">This position is finalized; candidates cannot be added.</div><?php endif; ?>
 </div>
 <?php
 $footer = new Footer();

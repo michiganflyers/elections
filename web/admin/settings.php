@@ -128,7 +128,7 @@ var voters = <?= json_encode($users, JSON_HEX_TAG); ?>;
 			<input type="hidden" name="role-user-id" value="<?= $user_row['skymanager_id'] ?>" />
 			<span class="position-code"><?= htmlspecialchars($user_row['name']) ?><?= $user_row['skymanager_id'] == $user->getUserId() ? ' (You)' : '' ?></span>
 
-			<select name="permission-level" onchange="this.form.submit()" <?= $user_row['skymanager_id'] == $user->getUserId() ? 'disabled' : '' ?>>
+			<select name="permission-level" <?= $user_row['skymanager_id'] == $user->getUserId() ? 'disabled' : 'onchange="this.form.submit()"' ?>>
 				<option value=1 <?= (int) $user_row['permission_level'] === 1 ? 'selected' : '' ?>>Pollworker</option>
 				<option value=2 <?= (int) $user_row['permission_level'] === 2 ? 'selected' : '' ?>>Admin</option>
 			</select>
