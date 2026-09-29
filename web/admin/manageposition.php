@@ -18,7 +18,17 @@ if (empty($position_code)) {
 }
 
 $result = null;
-if (!empty($_POST['finalize'])) {
+if (!empty($_POST['undo-finalize'])) {
+	$position_san = $db->sanitize($position_code);
+	$removed_proxy_votes = $db->query("DELETE FROM votes WHERE position='$position_san' AND vote_type='DIRECTED_PROXY' AND EXISTS (SELECT 1 FROM positions WHERE position='$position_san' AND finalized IS NOT NULL)");
+	$reopened = $removed_proxy_votes ? $db->query("UPDATE positions SET finalized=NULL WHERE position='$position_san' AND finalized IS NOT NULL") : false;
+	if (!$removed_proxy_votes || !$reopened || $db->getAffectedRows() !== 1) {
+		$error = 'Failed to undo position finalization';
+	} else {
+		$result = true;
+		$error = 'Finalization undone and directed proxy votes removed';
+	}
+} else if (!empty($_POST['finalize'])) {
 	$position_san = $db->sanitize($position_code);
 	$inserted = $db->query("
 		INSERT INTO votes (candidate_id, position, member_id, vote_type, submitter_id)
@@ -111,6 +121,14 @@ $header->output();
 <div class="form-section">
 	<h3><?= htmlspecialchars($position['label']) ?></h3>
 	<?php if ($is_finalized): ?><div class="form-row">Finalized at <?= htmlspecialchars($position['finalized']) ?></div><?php endif; ?>
+	<?php if ($is_finalized): ?>
+	<div class="form-row">
+		<p>Undoing finalization removes this position’s directed proxy votes and leaves the position Closed.</p>
+		<form action="manageposition.php?position=<?= urlencode($position_code) ?>" method="POST">
+			<button class="submit danger" type="submit" name="undo-finalize" value="undo-finalize" onclick="return confirm('Undo finalization and remove all directed proxy votes for this position?');">Undo Finalize</button>
+		</form>
+	</div>
+	<?php endif; ?>
 	<?php if (!$is_finalized): ?>
 	<form action="manageposition.php?position=<?= urlencode($position_code) ?>" method="POST">
 		<div class="form-row">
